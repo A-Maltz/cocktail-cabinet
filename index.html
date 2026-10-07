@@ -1,10 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cocktail Cabinet</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%273%27 fill=%27%23ff4fd8%27/%3E%3Crect x=%274%27 y=%274%27 width=%278%27 height=%278%27 fill=%27%234ff3ff%27/%3E%3C/svg%3E">
+  <meta name="description" content="Seven arcade games. Play either side, against the computer or another human.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h1>Hello 2</h1>
+  <header class="marquee">
+    <h1>COCKTAIL<span>CABINET</span></h1>
+    <p>Seven games. Either side. Human or machine.</p>
+  </header>
+
+  <main>
+    <!-- 1. Pick a game -->
+    <section id="menu" class="screen">
+      <div id="game-grid" class="grid"></div>
+    </section>
+
+    <!-- 2. Pick a side -->
+    <section id="setup" class="screen" hidden>
+      <button class="link back" data-go="menu">&larr; Back to the cabinet</button>
+      <h2 id="setup-title"></h2>
+      <p id="setup-tagline" class="tagline"></p>
+      <div id="setup-modes" class="modes"></div>
+    </section>
+
+    <!-- 3. Play -->
+    <section id="play" class="screen" hidden>
+      <div class="bar">
+        <button id="btn-menu" class="chip">&larr; Cabinet</button>
+        <button id="btn-side" class="chip">Switch side</button>
+        <span id="play-title"></span>
+        <span class="spacer"></span>
+        <button id="btn-pause" class="chip">Pause</button>
+        <button id="btn-mute" class="chip">Sound on</button>
+      </div>
+      <div id="stage">
+        <canvas id="screen" width="800" height="600"></canvas>
+        <div id="dom-stage" hidden></div>
+        <div id="overlay" hidden></div>
+      </div>
+      <p id="play-help" class="help"></p>
+    </section>
+  </main>
+
+  <footer>Static site &middot; no servers &middot; every computer player runs in your browser.</footer>
+
+  <script src="js/cabinet.js"></script>
+  <script src="js/games/snake.js"></script>
+  <script src="js/games/breakout.js"></script>
+  <script src="js/games/splat.js"></script>
+  <script src="js/games/asteroids.js"></script>
+  <script src="js/games/missile.js"></script>
+  <script src="js/games/invaders.js"></script>
+  <script src="js/games/imitation.js"></script>
+  <script>Cabinet.boot();</script>
 </body>
 </html>
