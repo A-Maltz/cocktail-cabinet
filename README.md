@@ -88,9 +88,9 @@ Each game has its own page: `/snake`, `/breakout`, `/splat`, `/asteroids`, `/mis
   | Asteroids (you send rocks) | SMALL / MED / BIG |
   | Missile Command (you attack) | MIRV toggle |
   | Space Invaders (you're the cannon) | ◀ ▶ FIRE |
-  | RocknRoller | ◀ ▶ JUMP |
 
   The buttons press the same keys the keyboard would, so the games didn't change.
+- **RocknRoller uses swipes instead of buttons:** swipe left/right to change lane (one lane per swipe; it fires as soon as your finger has moved about 26 px, not on release, because timing matters), swipe up to jump or to continue from the results screen. Swipes work anywhere on the game, including the black bars in fullscreen, and the page doesn't scroll while you play.
 - **How to add buttons:** a mode declares `touch: { left: [...], right: [...] }` and a `touchHow` instruction text shown on touch devices.
 
 ## How to play, and cheat codes for testing

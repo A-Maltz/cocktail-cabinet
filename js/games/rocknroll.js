@@ -319,9 +319,9 @@
         ["RV driver", "Single-player: you drive and the desert, the band and the police are the computer. There is no flipped mode."],
       ],
       controls: [
-        ["Change lane (4 lanes)", "Left/Right or A/D (hold to keep sliding)", "Hold ◀ ▶"],
-        ["Jump", "Up, W or Space (hold to keep hopping)", "JUMP"],
-        ["Next song (results screen)", "Space, Enter or Up", "JUMP"],
+        ["Change lane (4 lanes)", "Left/Right or A/D (hold to keep sliding)", "Swipe left / right (one lane per swipe)"],
+        ["Jump", "Up, W or Space (hold to keep hopping)", "Swipe up"],
+        ["Next song (results screen)", "Space, Enter or Up", "Swipe up"],
         ["Pause", "P or Esc", "Pause button"],
       ],
       rules: [
@@ -339,8 +339,7 @@
     },
     modes: [
       { id: 'classic', you: 'RV driver', cpu: 'The desert (and the band)',
-        touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'JUMP', key: 'Space', wide: true }] },
-        touchHow: 'Every stop is a new one-minute song, faster than the last. Follow the notes: they sit on the safe route. Hold ◀ ▶ to slide between lanes, JUMP to hop (you always land on a beat). Grab notes, spare tires and nitro; jump tumbleweeds and broken planks. Every 5th stop is an Area 51 boss: follow the faint green trail to dodge and shoot the saucer (the trail fades out by stop 20).',
+        touchHow: 'Every stop is a new one-minute song, faster than the last. Follow the notes: they sit on the safe route. Swipe left or right to change lanes (one lane per swipe), swipe up to jump (you always land on a beat). Grab notes, spare tires and nitro; jump tumbleweeds and broken planks. Every 5th stop is an Area 51 boss: follow the faint green trail to dodge and shoot the saucer (the trail fades out by stop 20).',
         how: 'Every stop is a new one-minute song, 16 BPM faster than the last. Follow the notes: they sit on the planned route, and nothing deadly is ever on it. Hold Left/Right (A/D) to slide between 4 lanes, Up/W/Space to jump (you always land on a beat). Grab notes for the Groove meter (ENCORE!), spare tires for a shield, nitro for an untouchable chorus. Jump tumbleweeds and cracked bridge planks; dodge wrecks, boulders and the police. Every 5th stop is Area 51: a faint green trail marks the route (it fades out over the first few bosses); stay on it under the saucer and the RV shoots it on the beat. 3 dents and you’re wrecked.' },
     ],
 
@@ -1127,6 +1126,33 @@
         if (k.has('ArrowUp') || k.has('KeyW') || k.has('Space') || api.pressed('ArrowUp') || api.pressed('KeyW') || api.pressed('Space')) jump();
       }
 
+      // ---- phones: swipe left/right to change lanes, swipe up to jump. A swipe fires as soon as the
+      // finger has travelled far enough (not on release), because timing matters. One lane per swipe; a long,
+      // deliberate slide keeps going (another lane every SWIPE_MORE px).
+      const SWIPE = 26, SWIPE_MORE = 90; // CSS pixels
+      let sw = null, paused = false;
+      const arena = typeof document !== 'undefined' ? document.getElementById('arena') : null;
+      function swipe(d) {
+        if (paused || over || !S) return;
+        if (S.phase === 'results') { if (d === 0 && S.resultsT > 1.5) nextSong(); return; }
+        if (d) move(d); else jump();
+      }
+      const onDown = (e) => { if (e.pointerType !== 'mouse') sw = { id: e.pointerId, x: e.clientX, y: e.clientY, need: SWIPE, jumped: false }; };
+      const onMove = (e) => {
+        if (!sw || e.pointerId !== sw.id) return;
+        const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+        if (Math.abs(dx) >= sw.need && Math.abs(dx) > Math.abs(dy)) { swipe(dx < 0 ? -1 : 1); sw.x = e.clientX; sw.y = e.clientY; sw.need = SWIPE_MORE; }
+        else if (-dy >= SWIPE && -dy > Math.abs(dx) && !sw.jumped) { swipe(0); sw.jumped = true; sw.x = e.clientX; sw.y = e.clientY; }
+      };
+      const onUp = (e) => { if (sw && e.pointerId === sw.id) sw = null; };
+      if (arena) {
+        arena.style.touchAction = 'none'; // the page mustn't scroll while you swipe
+        arena.addEventListener('pointerdown', onDown);
+        arena.addEventListener('pointermove', onMove);
+        arena.addEventListener('pointerup', onUp);
+        arena.addEventListener('pointercancel', onUp);
+      }
+
       const mult = () => {
         const bar = Math.floor(S.bp / 4);
         return (1 + Math.min(3, Math.floor(S.streak / 16))) * (encoreOn(bar) ? 2 : 1) * (nitroOn(bar) ? 2 : 1);
@@ -1535,7 +1561,7 @@
       return {
         // A read-only view for tools/sim.js and the tests.
         __debug: () => ({ events: S.events, bp: S.bp, rv, hp: tour.hp, song, S, tour, routeLane, stepEvents, airborne, songTime, beatAt, timeAt, endBar, stepBeat }),
-        setPaused(p) { if (ac) { if (p) ac.suspend(); else ac.resume(); } },
+        setPaused(p) { paused = p; sw = null; if (ac) { if (p) ac.suspend(); else ac.resume(); } },
         // Cheat codes for testing: jump between stops, skip to a boss, power-ups on demand.
         cheat(code, n) {
           if (over) return 'Too late: the RV is wrecked';
@@ -1553,7 +1579,16 @@
           if (code === 'ENCORE') { S.encore = { from: bar + 1, to: bar + 1 + ENCORE_BARS }; return 'Encore: double points'; }
           if (code === 'NITRO') { S.nitroAll = true; return 'Nitro for the rest of this song'; }
         },
-        destroy() { if (ac) { try { ac.close(); } catch (e) { /* */ } } },
+        destroy() {
+          if (ac) { try { ac.close(); } catch (e) { /* */ } }
+          if (arena) {
+            arena.style.touchAction = '';
+            arena.removeEventListener('pointerdown', onDown);
+            arena.removeEventListener('pointermove', onMove);
+            arena.removeEventListener('pointerup', onUp);
+            arena.removeEventListener('pointercancel', onUp);
+          }
+        },
         update(dt) {
           simT += dt;
           if (ac) {
