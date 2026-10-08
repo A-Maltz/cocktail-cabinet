@@ -130,11 +130,14 @@ footer { text-align: center; color: var(--dim); padding: 16px; font-size: 18px; 
 
 #overlay {
   position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 12px;
   background: rgba(5, 3, 15, .82);
   text-align: center;
   padding: 16px;
+  overflow-y: auto; /* a tall dialog on a small screen scrolls instead of being cut off */
 }
+#overlay > :first-child { margin-top: auto; }  /* centred when it fits */
+#overlay > :last-child { margin-bottom: auto; }
 #overlay h2 { font-family: var(--pixel); font-size: clamp(16px, 3.4vw, 26px); margin: 0; color: var(--accent); }
 #overlay p { margin: 0; }
 #overlay .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
@@ -219,7 +222,7 @@ footer { text-align: center; color: var(--dim); padding: 16px; font-size: 18px; 
 
 /* ---------- fullscreen (the browser's, or a fill-the-window fallback for iPhone) ---------- */
 #arena { position: relative; }
-#fs-exit { display: none; }
+#fs-bar { display: none; }
 #arena:fullscreen, #arena.fake-fs {
   position: fixed;
   inset: 0;
@@ -247,14 +250,17 @@ footer { text-align: center; color: var(--dim); padding: 16px; font-size: 18px; 
   pointer-events: none;
 }
 #arena:fullscreen .pad, #arena.fake-fs .pad, #arena:-webkit-full-screen .pad { pointer-events: auto; opacity: .82; }
-#arena:fullscreen #fs-exit, #arena.fake-fs #fs-exit, #arena:-webkit-full-screen #fs-exit {
-  display: block;
+#arena:fullscreen #fs-bar, #arena.fake-fs #fs-bar, #arena:-webkit-full-screen #fs-bar {
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;
+  left: calc(10px + env(safe-area-inset-left, 0px));
   position: absolute;
   top: calc(10px + env(safe-area-inset-top, 0px));
   right: calc(10px + env(safe-area-inset-right, 0px));
   z-index: 3;
   opacity: .85;
+  pointer-events: none; /* only the buttons take taps, not the strip between them */
 }
+#fs-bar .chip { pointer-events: auto; }
 body.no-scroll { overflow: hidden; }
 
 @media (max-width: 600px) {
@@ -286,4 +292,34 @@ body.no-scroll { overflow: hidden; }
   height: 100vh;
   height: 100dvh;
   aspect-ratio: auto;
+}
+
+/* ---------- how-to-play guides ---------- */
+.guide { margin-top: 22px; background: var(--panel); border: 1px solid #2d2963; border-radius: 12px; padding: 16px 20px; line-height: 1.15; }
+.guide:empty { display: none; }
+.guide h3 { font-family: var(--pixel); font-size: 14px; color: var(--c, var(--accent)); margin: 0 0 10px; }
+.guide h4 { font-family: var(--pixel); font-size: 11px; color: var(--accent-2); margin: 16px 0 6px; }
+.guide p, .guide li { color: var(--ink); }
+.guide .goal { font-size: 1.05em; }
+.guide ul { margin: 0; padding-left: 1.2em; }
+.guide li { margin: 3px 0; }
+.guide .table-wrap { overflow-x: auto; }
+.guide table { border-collapse: collapse; width: 100%; min-width: 420px; }
+.guide th, .guide td { text-align: left; padding: 4px 10px; border-bottom: 1px solid #2d2963; vertical-align: top; }
+.guide th { color: var(--dim); font-weight: normal; }
+.guide .cheat-note { color: var(--dim); margin-top: 14px; }
+#overlay .guide.in-overlay h3 { display: none; } /* the overlay already says HOW TO PLAY */
+#overlay .guide.in-overlay { margin: 0; max-width: 680px; width: 100%; text-align: left; }
+
+/* ---------- cheat codes ---------- */
+.cheat-form { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
+.cheat-form input { font-family: var(--pixel); font-size: 14px; text-transform: uppercase; background: #0d0b24; color: var(--ink); border: 2px solid var(--c, var(--accent)); border-radius: 8px; padding: 8px 10px; width: 14em; max-width: 70vw; }
+.cheat-form .cheat-msg { flex-basis: 100%; min-height: 1.2em; color: #ffd23a; }
+.cheat-list { flex-basis: 100%; list-style: none; margin: 0; padding: 0; color: var(--dim); font-size: .92em; line-height: 1.05; }
+.cheat-list li { margin: 2px 0; }
+.cheat-list b { color: var(--ink); font-weight: normal; }
+/* landscape phones in fullscreen: stack the fullscreen buttons in the side bar, clear of the game */
+@media (orientation: landscape) and (max-height: 500px) {
+  #arena:fullscreen #fs-bar, #arena.fake-fs #fs-bar, #arena:-webkit-full-screen #fs-bar { flex-direction: column; align-items: flex-end; left: auto; }
+  #fs-bar .chip { font-size: 12px; padding: 4px 8px; }
 }

@@ -41,6 +41,30 @@
     color: '#a6ff4f',
     tagline: 'Our pick. The fleet marches. Someone is giving the orders.',
     flip: 'you order the fleet to fire, the computer defends.',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      goal: "A fleet of invaders marches side to side and drops lower every time it reaches an edge. The cannon at the bottom shoots up and the invaders bomb down.",
+      sides: [
+        ["Cannon (classic)", "You move and fire. The computer chooses which invader drops each bomb and gets better at predicting where you’ll be. Clear the fleet to start the next, lower and faster wave. 3 lives. If the invaders reach the bottom, it’s over."],
+        ["Fleet commander (flipped)", "The computer plays the cannon and you choose which invader bombs. Only the lowest invader in each column can fire, and only a few bombs can be falling at once. Destroy the cannon 3 times, or land the fleet, to win the round. 3 hearts."],
+        ["Spectator (demo)", "The computer plays both sides."],
+      ],
+      controls: [
+        ["Move the cannon", "Left/Right or A/D", "◀ ▶"],
+        ["Fire", "Space", "FIRE"],
+        ["Drop a bomb (commander)", "Click on or under a column (or Space with the mouse there)", "Tap on or under a column"],
+        ["Pause", "P or Esc", "Pause button"],
+      ],
+      rules: [
+        "The cannon can only have one shot in the air at a time.",
+        "The bunkers block shots and bombs from both sides and crumble as they’re hit.",
+        "The fleet speeds up as it loses invaders. The top rows are worth the most points.",
+      ],
+      tips: [
+        "Cannon: shoot the edge columns first. The fleet has to march further before it turns and drops lower.",
+        "Commander: drop two bombs to the left and right of the cannon so it has nowhere to go.",
+      ],
+    },
     modes: [
       { id: 'classic', you: 'Cannon', cpu: 'Fleet commander',
         touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'FIRE', key: 'Space', wide: true }] },
@@ -60,7 +84,7 @@
 
       let wave = 1, score = 0, lives = 3, over = false;
       let fleet, fleetDir, marchT, animFrame, bombs, shot, cannon, bunkers, parts = [];
-      let fleetCD = 1, humanCD = 0, landed = false;
+      let fleetCD = 1, humanCD = 0, landed = false, god = false;
       const brain = { aimX: W / 2, react: new Map() };
 
       const level = () => (rounds ? rounds.level : wave);
@@ -239,6 +263,14 @@
       newWave();
 
       return {
+        // Cheat codes. Flipped mode's LEVEL / SKIP / LIVES / GOD come from Rounds.
+        cheat(code, n) {
+          if (rounds) return;
+          if (code === 'SKIP') { over = false; cleared(); return `Wave ${wave}`; }
+          if (code === 'LEVEL') { over = false; wave = n; newWave(); return `Wave ${n}`; }
+          if (code === 'LIVES') { lives = 3; return 'Cannons refilled'; }
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: bombs can’t hit the cannon' : 'God mode off'; }
+        },
         pointerDown(x) { if (!cpuFleet && !(rounds && rounds.busy)) humanFire(x); },
         keyDown(code) { if (!cpuFleet && code === 'Space') humanFire(api.mouse.x); },
         update(dt) {
@@ -307,7 +339,7 @@
             else if (b.y > H) b.dead = true;
             else if (cannon.alive && b.y + 10 >= CANNON_Y - 6 && b.y <= CANNON_Y + 16 && Math.abs(b.x - cannon.x) < CW / 2 + 2) {
               b.dead = true;
-              cannonHit();
+              if (!god) cannonHit(); // GOD cheat: bombs fizzle on the cannon
             }
           }
           bombs = bombs.filter((b) => !b.dead);

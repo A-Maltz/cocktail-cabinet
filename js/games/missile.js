@@ -28,6 +28,31 @@
     color: '#ff5a5a',
     tagline: 'Six cities. Three batteries. Incoming.',
     flip: 'you launch the missiles, the computer defends.',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      goal: "Missiles rain down on six cities and three missile batteries. Interceptor blasts destroy any missile that flies into them.",
+      sides: [
+        ["Defender (classic)", "You fire interceptors and the computer attacks in waves: more and faster missiles, then MIRVs that split into three. Leftover ammo and surviving cities score a bonus each wave, and every third wave rebuilds a city. Lose all six cities and it’s over."],
+        ["Attacker (flipped)", "You launch the missiles and the computer defends. Each wave you have a missile budget (a MIRV costs 2). Flatten 3 cities in one wave to win it; the defender gets sharper after every win. 3 hearts."],
+        ["Spectator (demo)", "The computer plays both sides."],
+      ],
+      controls: [
+        ["Fire an interceptor (defender)", "Click where it should explode", "Tap where it should explode"],
+        ["Choose the battery (defender)", "A / S / D = left / centre / right", "The nearest battery with ammo fires"],
+        ["Launch a missile (attacker)", "Press in the sky, drag to the target, release", "Drag from the sky to the target"],
+        ["Launch a MIRV (attacker)", "Right-click, or hold Shift", "Turn the MIRV toggle on"],
+        ["Pause", "P or Esc", "Pause button"],
+      ],
+      rules: [
+        "Each battery has 10 interceptors per wave, and a destroyed battery can’t fire.",
+        "Interceptors take time to fly up, so aim ahead of the missile.",
+        "A missile hitting the ground destroys any city or battery right next to it.",
+      ],
+      tips: [
+        "Defender: one blast can catch several missiles, so wait for them to bunch up, and keep some ammo for the MIRVs.",
+        "Attacker: aim at the cities furthest from batteries with ammo left, and launch several at once.",
+      ],
+    },
     modes: [
       { id: 'classic', you: 'Defender', cpu: 'Attacker',
         touchHow: 'Tap to fire an interceptor at that spot; it explodes there. The nearest battery with ammo fires. Each battery has 10 shots per wave. Lose all six cities and it’s over.',
@@ -52,6 +77,7 @@
       let toLaunch = 0, salvoT = 0, waveDone = false, waveEndT = 0;
       let budget = 0, launchCD = 0, aim = null, destroyedThisWave = 0;
       const def = { cd: 0 };
+      let god = false; // GOD cheat: cities can't fall, ammo never runs out
 
       const level = () => (rounds ? rounds.level : wave);
       const defSkill = (L) => ({
@@ -129,7 +155,7 @@
       function fireFrom(b, x, y, target) {
         if (!b || !b.alive || b.ammo <= 0) return false;
         y = Math.min(y, GROUND - 30);
-        b.ammo--;
+        if (!god) b.ammo--;
         const d = Math.hypot(x - b.x, y - (GROUND - 12));
         interceptors.push({ x0: b.x, y0: GROUND - 12, x: b.x, y: GROUND - 12, tx: x, ty: y, t: 0, dur: d / INTERCEPT_V, target });
         api.sfx.shoot();
@@ -173,6 +199,7 @@
       function hitGround(m) {
         explosions.push({ x: m.tx, y: GROUND - 6, t: 0, ground: true });
         api.sfx.boom();
+        if (god) return;
         for (const c of cities) {
           if (c.alive && Math.abs(c.x - m.tx) < 30) { c.alive = false; destroyedThisWave++; }
         }
@@ -219,6 +246,18 @@
       startWave(1, true);
 
       return {
+        // Cheat codes. Flipped mode's LEVEL / SKIP / LIVES / GOD come from Rounds.
+        cheat(code, n) {
+          if (rounds) return;
+          if (code === 'SKIP') {
+            if (waveDone || over) return 'Already between waves';
+            toLaunch = 0; missiles = []; interceptors = []; explosions = []; waveEndT = 1; // ends next tick
+            return `Wave ${wave} skipped`;
+          }
+          if (code === 'LEVEL') { over = false; startWave(n, false); return `Wave ${n}`; }
+          if (code === 'LIVES') { cities.forEach((c) => (c.alive = true)); bats.forEach((b) => { if (!b.alive) { b.alive = true; b.ammo = AMMO; } }); return 'Cities rebuilt'; }
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: cities can’t fall, endless ammo' : 'God mode off'; }
+        },
         keyDown(code) {
           if (cpuDef) return;
           const idx = { KeyA: 0, KeyS: 1, KeyD: 2 }[code];

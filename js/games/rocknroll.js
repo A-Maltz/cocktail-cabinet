@@ -309,6 +309,37 @@
     color: '#ff9a3c',
     tagline: 'A tour of the Nevada desert in an RV. Every stop is a brand-new one-minute song, and the road is the song.',
     badge: 'Original · rhythm runner',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      sidesTitle: 'Your side',
+      goal: "Drive an RV across the Nevada desert. Every stop is a new one-minute song made up as you play, the road is laid out to the music, and each song is faster than the last.",
+      sides: [
+        ["RV driver", "Single-player: you drive and the desert, the band and the police are the computer. There is no flipped mode."],
+      ],
+      controls: [
+        ["Change lane (4 lanes)", "Left/Right or A/D (hold to keep sliding)", "Hold ◀ ▶"],
+        ["Jump", "Up, W or Space (hold to keep hopping)", "JUMP"],
+        ["Next song (results screen)", "Space, Enter or Up", "JUMP"],
+        ["Pause", "P or Esc", "Pause button"],
+      ],
+      rules: [
+        "Notes (♪) sit on the safe route. Follow them and nothing deadly is ever in your way.",
+        "Jump tumbleweeds and cracked bridge planks; you always land exactly on a beat. Dodge wrecks, boulders, hay bales and the police.",
+        "A hit costs a dent. 3 dents and you’re wrecked. The mechanic at each stop fixes one.",
+        "Pickups: a spare tire absorbs one hit; nitro makes the next chorus untouchable (you smash through everything); a full Groove meter (catch 12 notes) gives an ENCORE with double points.",
+        "Every 5th stop is an Area 51 boss: stay on the route under the saucer and the RV shoots it on the beat.",
+        "Each stop is graded S / A / B / C on how many notes you caught and how often you were hit.",
+      ],
+      tips: [
+        "Listen more than you look: lane changes and jumps fall on the beat.",
+        "The notes show where the route goes next, so move as soon as they shift lanes.",
+      ],
+    },
+    cheats: [
+      "BOSS: jump to the next Area 51 boss",
+      "ENCORE: double points right now",
+      "NITRO: smash through everything for the rest of this song",
+    ],
     modes: [
       { id: 'classic', you: 'RV driver', cpu: 'The desert (and the band)',
         touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'JUMP', key: 'Space', wide: true }] },
@@ -787,7 +818,7 @@
         }
         return ev;
       }
-      const nitroOn = (bar) => S.nitroSec >= 0 && sectionOf(bar).s === S.nitroSec && sectionOf(bar).type === 'chorus';
+      const nitroOn = (bar) => S.nitroAll || S.nitroSec >= 0 && sectionOf(bar).s === S.nitroSec && sectionOf(bar).type === 'chorus';
       const encoreOn = (bar) => !!S.encore && bar >= S.encore.from && bar < S.encore.to;
 
       function playStep(n, t) {
@@ -1037,7 +1068,7 @@
       const rv = { lane: 1, x: LANES[1] };
       const hold = { dir: 0, t: 0 };
       const pops = [], dust = [], booms = [];
-      let shake = 0, hurtT = 0, over = false;
+      let shake = 0, hurtT = 0, over = false, god = false;
 
       function startSong() {
         tour.k++;
@@ -1110,6 +1141,7 @@
         shake = 0.35;
         hurtT = 0.6;
         SFX.hit();
+        if (god) { pop('GOD MODE', '#ffd23a'); return; }
         if (tour.spare) { tour.spare = false; pop('SPARE TIRE!', '#ffd23a', true); return; }
         tour.hp--;
         S.hits++;
@@ -1486,6 +1518,23 @@
         // A read-only view for tools/sim.js and the tests.
         __debug: () => ({ events: S.events, bp: S.bp, rv, hp: tour.hp, song, S, tour, routeLane, stepEvents, airborne, songTime, beatAt, timeAt, endBar, stepBeat }),
         setPaused(p) { if (ac) { if (p) ac.suspend(); else ac.resume(); } },
+        // Cheat codes for testing: jump between stops, skip to a boss, power-ups on demand.
+        cheat(code, n) {
+          if (over) return 'Too late: the RV is wrecked';
+          const jumpTo = (k) => { tour.k = k - 1; startSong(); return `Stop ${k}: ${song.title} (${song.bpm} BPM)`; };
+          if (code === 'SKIP') {
+            if (S.phase === 'results') { nextSong(); return `Stop ${tour.k}`; }
+            finishSong(); return 'Song skipped';
+          }
+          if (code === 'LEVEL') return jumpTo(n);
+          if (code === 'BOSS') return jumpTo((Math.floor(tour.k / BOSS_EVERY) + 1) * BOSS_EVERY);
+          if (code === 'LIVES') { tour.hp = 3; tour.spare = true; return 'Repaired, with a spare tire'; }
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: nothing can hurt the RV' : 'God mode off'; }
+          if (S.phase !== 'play' && (code === 'ENCORE' || code === 'NITRO')) return 'Wait for the next song';
+          const bar = Math.floor(Math.max(0, S.bp) / 4);
+          if (code === 'ENCORE') { S.encore = { from: bar + 1, to: bar + 1 + ENCORE_BARS }; return 'Encore: double points'; }
+          if (code === 'NITRO') { S.nitroAll = true; return 'Nitro for the rest of this song'; }
+        },
         destroy() { if (ac) { try { ac.close(); } catch (e) { /* */ } } },
         update(dt) {
           simT += dt;

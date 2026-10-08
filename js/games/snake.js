@@ -60,6 +60,29 @@
     color: '#7dff7a',
     tagline: 'Eat apples, grow longer, never bite yourself.',
     flip: 'you place the apples, the computer steers.',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      goal: "Eat apples and grow as long as you can. Hitting a wall or your own body ends it.",
+      sides: [
+        ["Snake (classic)", "You steer. The computer decides where every apple appears and picks nastier spots (tight corners, up against your body) as you grow. You speed up with every apple. Play until you crash; your score is apples eaten."],
+        ["Apple placer (flipped)", "The computer steers and you drop the apples. Each apple must be at least 4 squares from the head and reachable. The snake has a hunger meter: if it starves or crashes before eating its quota (12 apples, +2 every level) you win the round and the next snake is smarter. If it eats its quota you lose a heart. 3 hearts."],
+        ["Spectator (demo)", "The computer plays both sides."],
+      ],
+      controls: [
+        ["Steer the snake", "Arrow keys or WASD", "Arrow buttons"],
+        ["Drop an apple (placer)", "Click a square", "Tap a square"],
+        ["Pause", "P or Esc", "Pause button"],
+      ],
+      rules: [
+        "You can’t turn straight back into yourself.",
+        "Placer: if you wait more than 5 seconds, an apple is dropped for you at random.",
+        "Placer: each apple makes the snake 3 squares longer, and it moves faster every level.",
+      ],
+      tips: [
+        "Snake: leave yourself a path back to your tail, and don’t box yourself into a corner for one apple.",
+        "Placer: put apples far away (hunger) and in pockets next to the body, so eating them traps the snake.",
+      ],
+    },
     modes: [
       { id: 'classic', you: 'Snake', cpu: 'Apple placer',
         touch: { left: [{ label: '\u25c0', key: 'ArrowLeft' }, { label: '\u25b6', key: 'ArrowRight' }], right: [{ label: '\u25b2', key: 'ArrowUp' }, { label: '\u25bc', key: 'ArrowDown' }] },
@@ -77,7 +100,7 @@
       if (mode === 'flipped') { COLS = 20; ROWS = 14; CS = 40; } else { COLS = 32; ROWS = 23; CS = 25; }
       const GROW = mode === 'flipped' ? 3 : 1;
 
-      let snake, dir, queue, grow, apple, moveT, score, eaten, hunger, dead, placeT, hover, demoLevel;
+      let snake, dir, queue, grow, apple, moveT, score, eaten, hunger, dead, placeT, hover, demoLevel, god = false;
       const rounds = mode === 'flipped' ? api.Rounds({ next: () => reset() }) : null;
 
       const level = () => (rounds ? rounds.level : mode === 'demo' ? demoLevel : 1);
@@ -215,8 +238,9 @@
         else if (queue.length) dir = queue.shift();
 
         const h = snake[0];
-        const nx = h.x + dir.x, ny = h.y + dir.y;
-        if (!inside(nx, ny) || bodyBlocked().has(key(nx, ny))) return die('CRASH!');
+        let nx = h.x + dir.x, ny = h.y + dir.y;
+        if (god) { nx = (nx + COLS) % COLS; ny = (ny + ROWS) % ROWS; } // GOD cheat: wrap, no crashes
+        else if (!inside(nx, ny) || bodyBlocked().has(key(nx, ny))) return die('CRASH!');
 
         snake.unshift({ x: nx, y: ny });
         if (apple) hunger++; // no hunger while the placer is still deciding
@@ -258,6 +282,19 @@
       reset();
 
       return {
+        // Cheat codes. Flipped mode's LEVEL / SKIP / LIVES / GOD come from Rounds.
+        cheat(code, n) {
+          if (mode === 'flipped') return;
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: the snake cannot crash' : 'God mode off'; }
+          if (mode === 'demo') {
+            if (code === 'LEVEL') { demoLevel = Math.min(5, n); score = 0; reset(); return `Snake skill ${demoLevel}`; }
+            if (code === 'SKIP') { demoLevel = Math.min(5, demoLevel + 1); score = 0; reset(); return `Snake skill ${demoLevel}`; }
+            return;
+          }
+          // classic: speed and the apple placer's sneakiness both grow with apples eaten
+          if (code === 'SKIP') { score += 5; grow += 5; return '+5 apples'; }
+          if (code === 'LEVEL') { const add = Math.max(0, 4 * (n - 1) - score); score += add; grow += add; return `Apples set to ${score}`; }
+        },
         keyDown(code) {
           if (cpuSnake) return;
           const map = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1],

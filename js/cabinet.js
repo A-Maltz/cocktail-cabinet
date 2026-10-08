@@ -139,7 +139,7 @@
       lose(text) {
         if (r.busy) return;
         r.busy = true;
-        r.hearts--;
+        if (!r.god) r.hearts--; // GOD cheat: lost rounds cost nothing
         api.sfx.bad();
         if (r.hearts <= 0) {
           api.flash(text || 'The computer made it.', 1.6, '#ff5a5a');
@@ -154,6 +154,10 @@
         api.after(1.8, () => { r.busy = false; opts.next(r.level); });
       },
       hud() { return `LV ${r.level}  ${Draw.hearts(r.hearts, r.maxHearts)}  WON ${r.won}`; },
+      // cheat codes (for testing): jump to a level, skip this round, refill hearts
+      setLevel(n) { r.level = Math.max(1, n); r.busy = false; opts.next(r.level); },
+      skip() { r.win('SKIPPED!'); },
+      refill() { r.hearts = r.maxHearts; },
     };
     return r;
   }
@@ -226,7 +230,11 @@
     $('#btn-menu').addEventListener('click', () => go('/'));
     $('#btn-side').addEventListener('click', () => { const g = current && current.def; exitFullscreen(); stop(); if (g) openSetup(g); });
     $('#btn-fs').addEventListener('click', () => (isFullscreen() ? exitFullscreen() : enterFullscreen()));
+    $('#btn-cheat').addEventListener('click', () => openCheats());
+    $('#btn-help').addEventListener('click', () => openHelp());
     $('#fs-exit').addEventListener('click', () => exitFullscreen());
+    $('#fs-cheat').addEventListener('click', () => openCheats());
+    $('#fs-help').addEventListener('click', () => openHelp());
     document.addEventListener('fullscreenchange', paintFullscreen);
     document.addEventListener('webkitfullscreenchange', paintFullscreen);
     $('#btn-pause').addEventListener('click', () => togglePause());
@@ -308,6 +316,90 @@
       b.addEventListener('click', () => start(def, m.id));
       box.appendChild(b);
     }
+    $('#setup-guide').innerHTML = guideHTML(def);
+  }
+
+  // ---- how-to-play guides: def.guide = { goal, sides: [[name, text]], controls: [[action, keys, touch]], rules: [], tips: [] }
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function guideHTML(def) {
+    const g = def.guide;
+    if (!g) return '';
+    const list = (items) => '<ul>' + items.map((x) => `<li>${esc(x)}</li>`).join('') + '</ul>';
+    let h = `<h3>How to play ${esc(def.title)}</h3><p class="goal">${esc(g.goal)}</p>`;
+    if (g.sides) h += `<h4>${esc(g.sidesTitle || 'The two sides')}</h4><ul>` + g.sides.map(([name, text]) => `<li><b>${esc(name)}</b>: ${esc(text)}</li>`).join('') + '</ul>';
+    if (g.controls) {
+      h += '<h4>Controls</h4><div class="table-wrap"><table><tr><th>To</th><th>Keyboard / mouse</th><th>Touch</th></tr>';
+      h += g.controls.map((row) => '<tr>' + row.map((c) => `<td>${esc(c)}</td>`).join('') + '</tr>').join('') + '</table></div>';
+    }
+    if (g.rules) h += '<h4>Rules</h4>' + list(g.rules);
+    if (g.tips) h += '<h4>Tips</h4>' + list(g.tips);
+    const extra = (def.cheats || []).map((c) => c.split(':')[0]).join(', ');
+    h += `<p class="cheat-note">Testing? Press <b>Cheats</b> while playing and type a code: SKIP, LEVEL 5, LIVES, GOD${extra ? ', ' + esc(extra) : ''}.</p>`;
+    return h;
+  }
+  function openHelp() {
+    if (!current) return;
+    const wasPaused = current.paused;
+    if (!current.def.dom && !current.over) pauseQuietly(true);
+    const div = document.createElement('div');
+    div.className = 'guide in-overlay';
+    div.innerHTML = guideHTML(current.def);
+    showOverlay('HOW TO PLAY', [], [['Back to the game', () => { overlay.hidden = true; if (!wasPaused && !current.over) pauseQuietly(false); }]], div);
+  }
+
+  // ---- cheat codes (for testing). Games handle codes in inst.cheat(code, n), returning a message
+  // (or undefined if they don't know it); flipped modes get LEVEL/SKIP/LIVES from Rounds.
+  const CHEAT_ALIASES = { STOP: 'LEVEL', WAVE: 'LEVEL', ROUND: 'LEVEL', NEXT: 'SKIP', HEAL: 'LIVES', HP: 'LIVES', INVINCIBLE: 'GOD' };
+  const CHEAT_HELP = ['SKIP: finish this level / round / stop', 'LEVEL 5: jump to level 5', 'LIVES: refill lives or hearts', 'GOD: invincible on/off'];
+  function runCheat(text) {
+    const run = current;
+    if (!run || run.over) return { ok: false, msg: 'Start a game first.' };
+    const [raw, num] = text.trim().toUpperCase().split(/\s+/);
+    const code = CHEAT_ALIASES[raw] || raw;
+    const n = parseInt(num, 10);
+    if (!code) return { ok: false, msg: '' };
+    if (code === 'LEVEL' && !(n >= 1)) return { ok: false, msg: 'Add a number, e.g. LEVEL 5' };
+    let msg = run.inst.cheat ? run.inst.cheat(code, n) : undefined;
+    if (msg === undefined && run.rounds) {
+      if (code === 'LEVEL') { run.rounds.setLevel(n); msg = `Jumped to level ${n}`; }
+      else if (code === 'SKIP') { run.rounds.skip(); msg = 'Round skipped'; }
+      else if (code === 'LIVES') { run.rounds.refill(); msg = 'Hearts refilled'; }
+      else if (code === 'GOD') { run.rounds.god = !run.rounds.god; msg = run.rounds.god ? 'God mode on: losing a round costs no heart' : 'God mode off'; }
+    }
+    if (msg !== undefined) run.cheated = true; // cheated runs don't set a best score
+    return msg === undefined ? { ok: false, msg: `"${text.trim()}" doesn't do anything in this game.` } : { ok: true, msg };
+  }
+  function pauseQuietly(on) { // pause or resume without showing the pause menu
+    if (!current || current.def.dom) return;
+    current.paused = on;
+    if (current.inst.setPaused) current.inst.setPaused(on);
+    $('#btn-pause').textContent = on ? 'Resume' : 'Pause';
+    if (!on) lastT = performance.now();
+  }
+  function openCheats() {
+    if (!current || current.over) return;
+    const wasPaused = current.paused;
+    pauseQuietly(true);
+    const close = () => { overlay.hidden = true; if (!wasPaused) pauseQuietly(false); };
+    const form = document.createElement('form');
+    form.className = 'cheat-form';
+    form.innerHTML = '<input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SKIP" aria-label="Cheat code"><button class="btn" type="submit">Enter</button><p class="cheat-msg"></p><ul class="cheat-list"></ul>';
+    form.querySelector('.cheat-list').innerHTML = [...CHEAT_HELP, ...(current.def.cheats || [])]
+      .map((c) => { const [code, what] = c.split(': '); return `<li><b>${esc(code)}</b>: ${esc(what)}</li>`; }).join('');
+    const input = form.querySelector('input'), msgEl = form.querySelector('.cheat-msg');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const r = runCheat(input.value);
+      msgEl.textContent = r.msg;
+      if (r.ok) { // show the confirmation for a moment, then get back to the game
+        input.disabled = true;
+        const run = current;
+        setTimeout(() => { if (current === run) { close(); if (!run.def.dom) run.api.flash(r.msg.toUpperCase(), 1.4, '#ffd23a'); } }, 700);
+      }
+      else input.select();
+    });
+    showOverlay('CHEAT CODES', [], [['Close', close, true]], form);
+    setTimeout(() => input.focus(), 50);
   }
 
   function makeApi(def, modeId) {
@@ -323,7 +415,7 @@
       flash(text, sec = 1.2, color = '#fff') { run.banners.push({ text, t: sec, color }); },
       end(result) { finish(run, result); },
       best: () => getBest(def.id, modeId),
-      Rounds: (opts) => Rounds(api, opts),
+      Rounds: (opts) => (run.rounds = Rounds(api, opts)),
     };
     return api;
   }
@@ -501,7 +593,7 @@
     if (run !== current || run.over) return;
     run.over = true;
     const lines = (result.lines || []).slice();
-    if (typeof result.score === 'number' && run.mode.id !== 'demo') {
+    if (typeof result.score === 'number' && run.mode.id !== 'demo' && !run.cheated) {
       const best = getBest(run.def.id, run.mode.id);
       if (result.score > best) {
         setBest(run.def.id, run.mode.id, result.score);
@@ -517,7 +609,7 @@
     ]);
   }
 
-  function showOverlay(title, lines, buttons) {
+  function showOverlay(title, lines, buttons, extra) {
     overlay.innerHTML = '';
     const h = document.createElement('h2');
     h.textContent = title;
@@ -527,6 +619,7 @@
       p.textContent = l;
       overlay.appendChild(p);
     }
+    if (extra) overlay.appendChild(extra);
     const row = document.createElement('div');
     row.className = 'row';
     for (const [label, fn, alt] of buttons) {
@@ -538,5 +631,6 @@
     }
     overlay.appendChild(row);
     overlay.hidden = false;
+    overlay.scrollTop = 0;
   }
 })();

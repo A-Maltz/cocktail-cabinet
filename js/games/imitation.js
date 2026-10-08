@@ -367,6 +367,28 @@
     dom: true,
     tagline: 'Chat with a stranger. Human or machine?',
     flip: 'play the AI, or face a real human in another browser.',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      goal: "A Turing test. You chat with a stranger who might be a real person in another browser or the computer pretending to be one, and nothing tells you which.",
+      sides: [
+        ["Judge (classic)", "Chat, then decide whether your partner is a HUMAN or an AI. Guess right to go up a level; the computer gets more convincing (slower typing, typos, slang). 3 hearts."],
+        ["Imitator (flipped)", "Same chat, opposite goal: make your partner believe that YOU are the AI. At the end they give their verdict on you. The computer judge gets harder to fool each level. 3 hearts."],
+      ],
+      controls: [
+        ["Find a partner", "Find a match", "Find a match"],
+        ["Send a message", "Type and press Enter (or Send)", "Type and tap Send"],
+        ["Give your verdict", "HUMAN or AI", "HUMAN or AI"],
+      ],
+      rules: [
+        "Matchmaking takes a few seconds. If nobody else is searching, the computer steps in.",
+        "You take turns: one message each, 20 seconds per message, 4 messages each. When time runs out, whatever you typed is sent.",
+        "Pasting is blocked.",
+      ],
+      tips: [
+        "Judge: ask things a person answers loosely but a program answers too exactly (a quick sum, a word spelled backwards), or ask about something local and recent.",
+        "Imitator: be formal, precise and fast, and never make typos.",
+      ],
+    },
     modes: [
       { id: 'classic', you: 'Judge', cpu: 'Imitator (or a real person)',
         how: 'You are matched with a stranger: maybe someone in another browser, maybe the computer pretending to be a person. You take turns, one message each, 20 seconds per message, 4 messages each. Then decide: human or AI? Guess right to level up; the computer gets more convincing. 3 hearts.' },
@@ -380,7 +402,7 @@
       const later = (ms, fn) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
       const timers = [];
       const state = { level: 1, hearts: 3, won: 0, played: 0 };
-      let mm = null, session = null, searchTick = null;
+      let mm = null, session = null, searchTick = null, god = false;
 
       root.innerHTML = `
         <div class="imit">
@@ -687,7 +709,7 @@
         const win = mode === 'classic' ? correct : fooled;
 
         state.played++;
-        if (win) { state.won++; state.level++; api.sfx.good(); } else { state.hearts--; api.sfx.bad(); }
+        if (win) { state.won++; state.level++; api.sfx.good(); } else { if (!god) state.hearts--; api.sfx.bad(); }
 
         $('.reveal-title').textContent = win ? 'YOU WIN THIS ONE' : 'NOT THIS TIME';
         const box = $('.imit-reveal-box');
@@ -722,7 +744,23 @@
 
       paintLobby();
 
+      // Cheat codes: drop whatever match is going on and go back to the lobby at the new level.
+      function backToLobby() {
+        timers.forEach(clearTimeout);
+        timers.length = 0;
+        clearInterval(searchTick);
+        endConn();
+        session = null;
+        paintLobby();
+      }
+
       return {
+        cheat(code, n) {
+          if (code === 'SKIP') { state.won++; state.level++; backToLobby(); return `Match skipped: level ${state.level}`; }
+          if (code === 'LEVEL') { state.level = n; backToLobby(); return `Level ${n}`; }
+          if (code === 'LIVES') { state.hearts = 3; if (!session) paintLobby(); return 'Hearts refilled'; }
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: a lost match costs no heart' : 'God mode off'; }
+        },
         update(dt) {
           const s = session;
           if (!s) return;

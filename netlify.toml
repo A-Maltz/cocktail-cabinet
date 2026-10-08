@@ -1,7 +1,9 @@
 # Static site: no build step, publish the repository root.
 [build]
   publish = "."
-  command = ""
+  # Cache-busting: stamp this deploy's commit into the script/stylesheet URLs in index.html
+  # (/js/cabinet.js?v=__V__ -> ?v=<commit>), so no browser or CDN can keep running old code.
+  command = "sed -i \"s/__V__/${COMMIT_REF:-dev}/g\" index.html"
 
 [[headers]]
   for = "/*"

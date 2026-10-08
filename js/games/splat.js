@@ -51,6 +51,28 @@
     color: '#ffd23a',
     tagline: 'One button. Many columns. Try not to go splat.',
     flip: 'you lay out the columns, the computer flies.',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      goal: "Flap the bird through the gaps between the columns. Touch a column or the ground and it goes splat.",
+      sides: [
+        ["Bird (classic)", "You flap. The computer places every gap, starting gentle and then swinging them further apart and making them narrower. Your score is columns cleared."],
+        ["Column builder (flipped)", "You choose the height of each next gap (up to 265 px from the last one) and the computer flies. Make the bird splat before it clears 12 columns to win the round. 3 hearts."],
+        ["Spectator (demo)", "The computer plays both sides."],
+      ],
+      controls: [
+        ["Flap", "Space, Up, W or click", "Tap anywhere"],
+        ["Set the next gap (builder)", "Move the mouse up/down, or Up/Down", "Drag up and down"],
+        ["Pause", "P or Esc", "Pause button"],
+      ],
+      rules: [
+        "Gravity never stops, and every flap gives the same lift.",
+        "Builder: the gap locks when its column appears on the right.",
+      ],
+      tips: [
+        "Bird: tap in small, steady rhythms rather than big bursts, and aim for the middle of each gap.",
+        "Builder: alternate very high and very low gaps so the bird has to climb and dive hard.",
+      ],
+    },
     modes: [
       { id: 'classic', you: 'Bird', cpu: 'Column builder',
         touchHow: 'Tap anywhere to flap. The computer places every gap: gentle at first, then bigger swings and tighter gaps.',
@@ -69,7 +91,7 @@
 
       let bird, cols, passed, dead, scrollSinceSpawn, lastGap, lastDir, flapQueued, deadT;
       let builderY = H / 2, frame = 0, groundX = 0, particles = [], demoBest = 0;
-      let skill = null;
+      let skill = null, god = false;
 
       const level = () => (rounds ? rounds.level : 1 + Math.floor(passed / 8));
       const speed = () => (mode === 'classic' ? 175 + Math.min(passed, 30) * 2 : 175 + Math.min(level() - 1, 8) * 6);
@@ -171,6 +193,14 @@
       reset();
 
       return {
+        // Cheat codes. Flipped mode's LEVEL / SKIP / LIVES / GOD come from Rounds.
+        // Classic difficulty (speed, swing, gap size) grows with columns cleared.
+        cheat(code, n) {
+          if (rounds) return;
+          if (code === 'SKIP') { passed += 5; skill = birdSkill(level()); return `Columns: ${passed}`; }
+          if (code === 'LEVEL') { passed = 5 * (n - 1); skill = birdSkill(level()); return `Columns: ${passed}`; }
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: fly through columns' : 'God mode off'; }
+        },
         pointerDown() { if (!cpuBird) flapQueued = true; },
         pointerMove(x, y) { if (!cpuBuilder) builderY = y; },
         keyDown(code) {
@@ -207,7 +237,12 @@
           if (flap) api.sfx.blip();
           physicsStep(bird, flap, dt);
 
-          if (hits(bird.y, cols, 0)) return splat();
+          if (hits(bird.y, cols, 0)) {
+            if (!god) return splat();
+            // GOD cheat: fly through columns; the ground and sky just hold the bird in
+            if (bird.y > GROUND - BR) { bird.y = GROUND - BR; bird.vy = Math.min(0, bird.vy); }
+            if (bird.y < TOP + BR) { bird.y = TOP + BR; bird.vy = Math.max(0, bird.vy); }
+          }
           for (const c of cols) {
             if (!c.passed && c.x + CW < BX - BR) {
               c.passed = true;

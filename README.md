@@ -92,6 +92,23 @@ Each game has its own page: `/snake`, `/breakout`, `/splat`, `/asteroids`, `/mis
   The buttons press the same keys the keyboard would, so the games didn't change.
 - **How to add buttons:** a mode declares `touch: { left: [...], right: [...] }` and a `touchHow` instruction text shown on touch devices.
 
+## How to play, and cheat codes for testing
+
+- **Guides:** every game's page has a **How to play** guide under the side buttons. It covers the goal, both sides, a controls table (keyboard/mouse and touch), the rules and some tips. While playing, the **How to play** button opens the same guide and pauses the game. Guides live in each game's `guide: {...}` in `js/games/*.js`.
+- **Cheats:** press **Cheats** while playing (it's also next to *Exit fullscreen* in fullscreen), type a code and press Enter. Codes are case-insensitive:
+
+  | Code | What it does |
+  |---|---|
+  | `SKIP` | finish the current level, wave, round, match or song |
+  | `LEVEL 5` | jump to level / wave / stop 5 (aliases: `WAVE 5`, `STOP 5`) |
+  | `LIVES` | refill lives, balls, ships, cities or hearts |
+  | `GOD` | invincible on/off; when you play the flipped side, a lost round costs no heart |
+  | `BOSS` | RocknRoller: jump to the next Area 51 boss |
+  | `ENCORE` | RocknRoller: double points right now |
+  | `NITRO` | RocknRoller: smash through everything for the rest of the song |
+
+  A run where you used a cheat doesn't record a best score. In flipped modes `LEVEL`, `SKIP`, `LIVES` and `GOD` are handled once, in `Rounds`; each game handles its own classic-mode codes in `cheat(code, n)`.
+
 ## Running it
 
 It's plain HTML/CSS/JS with no build step. Open `index.html`, or serve the folder:
@@ -100,7 +117,7 @@ It's plain HTML/CSS/JS with no build step. Open `index.html`, or serve the folde
 python -m http.server 8000
 ```
 
-Netlify publishes the repository root (`netlify.toml`) on every push to `master`.
+Netlify publishes the repository root (`netlify.toml`) on every push to `master`. The only build step is cache-busting: `index.html` loads `/js/...js?v=__V__`, and the Netlify build command replaces `__V__` with the commit hash (`$COMMIT_REF`). Each deploy then has new script and stylesheet URLs, so no browser or CDN can keep running old code. This matters here: the site sits behind Cloudflare, which tells browsers to cache JS for 4 hours.
 
 ## How it fits together
 

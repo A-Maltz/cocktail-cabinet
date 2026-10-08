@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=__V__">
 </head>
 <body>
   <header class="marquee">
@@ -29,6 +29,7 @@
       <h2 id="setup-title"></h2>
       <p id="setup-tagline" class="tagline"></p>
       <div id="setup-modes" class="modes"></div>
+      <div id="setup-guide" class="guide"></div>
     </section>
 
     <!-- 3. Play -->
@@ -41,6 +42,8 @@
         <button id="btn-pause" class="chip">Pause</button>
         <button id="btn-mute" class="chip">Sound on</button>
         <button id="btn-fs" class="chip">Fullscreen</button>
+        <button id="btn-help" class="chip">How to play</button>
+        <button id="btn-cheat" class="chip">Cheats</button>
       </div>
       <!-- The arena is what goes fullscreen: the game plus its touch buttons. -->
       <div id="arena">
@@ -50,7 +53,11 @@
           <div id="overlay" hidden></div>
         </div>
         <div id="touchpad" hidden></div>
-        <button id="fs-exit" class="chip">&#x2715; Exit fullscreen</button>
+        <div id="fs-bar">
+          <button id="fs-help" class="chip">How to play</button>
+          <button id="fs-cheat" class="chip">Cheats</button>
+          <button id="fs-exit" class="chip">&#x2715; Exit fullscreen</button>
+        </div>
       </div>
       <p id="play-help" class="help"></p>
     </section>
@@ -58,15 +65,15 @@
 
   <footer>Static site &middot; no servers &middot; every computer player runs in your browser.</footer>
 
-  <script src="/js/cabinet.js"></script>
-  <script src="/js/games/snake.js"></script>
-  <script src="/js/games/breakout.js"></script>
-  <script src="/js/games/splat.js"></script>
-  <script src="/js/games/asteroids.js"></script>
-  <script src="/js/games/missile.js"></script>
-  <script src="/js/games/invaders.js"></script>
-  <script src="/js/games/imitation.js"></script>
-  <script src="/js/games/rocknroll.js"></script>
+  <script src="/js/cabinet.js?v=__V__"></script>
+  <script src="/js/games/snake.js?v=__V__"></script>
+  <script src="/js/games/breakout.js?v=__V__"></script>
+  <script src="/js/games/splat.js?v=__V__"></script>
+  <script src="/js/games/asteroids.js?v=__V__"></script>
+  <script src="/js/games/missile.js?v=__V__"></script>
+  <script src="/js/games/invaders.js?v=__V__"></script>
+  <script src="/js/games/imitation.js?v=__V__"></script>
+  <script src="/js/games/rocknroll.js?v=__V__"></script>
   <script>Cabinet.boot();</script>
 </body>
 </html>

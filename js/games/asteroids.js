@@ -36,6 +36,32 @@
     color: '#4ff3ff',
     tagline: 'Thrust, turn, shoot. Space is full of rocks.',
     flip: 'you throw the asteroids, the computer flies.',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      goal: "Pilot a ship through an asteroid field. Shots break big rocks into medium ones and medium into small, and a rock hitting the ship destroys it.",
+      sides: [
+        ["Ship (classic)", "You fly and shoot. The computer sends each wave of rocks: big and slow at first, then faster, smaller and aimed at you. Clear a wave to get the next one. 3 ships."],
+        ["Asteroid sender (flipped)", "You throw rocks at the computer ship. Rocks cost energy, which refills over time. Launch at least 170 px from the ship. Destroy it 3 times within 45 seconds to win the round. 3 hearts."],
+        ["Spectator (demo)", "The computer plays both sides."],
+      ],
+      controls: [
+        ["Turn", "Left/Right or A/D", "◀ ▶"],
+        ["Thrust", "Up or W", "THRUST"],
+        ["Fire", "Space (hold for auto-fire)", "FIRE"],
+        ["Pick a rock size (sender)", "1 / 2 / 3, or Q to cycle", "SMALL / MED / BIG"],
+        ["Throw a rock (sender)", "Drag and release (a click lobs it at the ship)", "Drag and let go (a tap lobs it)"],
+        ["Pause", "P or Esc", "Pause button"],
+      ],
+      rules: [
+        "Everything wraps around the screen edges.",
+        "Your ship is briefly invulnerable after it (re)spawns.",
+        "Big rocks are 20 points, medium 50, small 100.",
+      ],
+      tips: [
+        "Ship: you drift, so use short bursts of thrust and keep shooting the closest threat.",
+        "Sender: throw small, fast rocks from two directions at once; the ship can only dodge one way.",
+      ],
+    },
     modes: [
       { id: 'classic', you: 'Ship', cpu: 'Asteroid sender',
         touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'THRUST', key: 'ArrowUp', wide: true }, { label: 'FIRE', key: 'Space', wide: true }] },
@@ -56,7 +82,7 @@
 
       let ship, rocks = [], bullets = [], parts = [], score = 0, lives = 3, wave = 1;
       let budget = 0, spawnT = 0, waveT = 0, roundT = ROUND_TIME, over = false;
-      let energy = 6, selSize = 2, drag = null;
+      let energy = 6, selSize = 2, drag = null, god = false;
       const brain = { t: 0, turn: 0, thrust: false, fire: false, seen: new Map() };
 
       const level = () => (rounds ? rounds.level : wave);
@@ -251,6 +277,14 @@
       startWave(1);
 
       return {
+        // Cheat codes. Flipped mode's LEVEL / SKIP / LIVES / GOD come from Rounds.
+        cheat(code, n) {
+          if (rounds) return;
+          if (code === 'SKIP') { rocks = []; startWave(wave + 1); return `Wave ${wave}`; }
+          if (code === 'LEVEL') { rocks = []; startWave(n); return `Wave ${n}`; }
+          if (code === 'LIVES') { lives = 3; if (!ship.alive) newShip(); return 'Ships refilled'; }
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: rocks can’t hurt the ship' : 'God mode off'; }
+        },
         keyDown(code) {
           if (cpuSender) return;
           if (code === 'Digit1') selSize = 1;
@@ -318,7 +352,7 @@
             const ri = rocks.findIndex((r) => tdist(r.x, r.y, b.x, b.y) < r.r);
             if (ri >= 0) { bullets.splice(bi, 1); breakRock(ri); }
           }
-          if (ship.alive && ship.inv <= 0) {
+          if (ship.alive && ship.inv <= 0 && !god) {
             const ri = rocks.findIndex((r) => tdist(r.x, r.y, ship.x, ship.y) < r.r * 0.9 + SHIP_R * 0.8);
             if (ri >= 0) { breakRock(ri); shipHit(); }
           }

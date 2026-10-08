@@ -44,6 +44,29 @@
     color: '#ff8c3a',
     tagline: 'Smash the wall. This wall fights back.',
     flip: 'you guard the wall, the computer breaks it.',
+    // How-to-play guide shown on the game page (and the How to play button).
+    guide: {
+      goal: "Knock out every brick with the ball without letting it fall past the paddle at the bottom.",
+      sides: [
+        ["Breaker (classic)", "You move the paddle. A purple guard under the bricks swats the ball back down, but it gets slower with every block in a row and recovers when a brick breaks. Clear the wall to reach the next level (more rows, faster ball). 3 balls."],
+        ["The wall’s guard (flipped)", "You move the purple guard and the computer plays the paddle. Block the ball on its way up and angle it away from the paddle. Make the computer drop 3 balls before it clears the wall to win the round. 3 hearts."],
+        ["Spectator (demo)", "The computer plays both sides."],
+      ],
+      controls: [
+        ["Move the paddle / guard", "Mouse, or Left/Right (A/D)", "Drag your finger"],
+        ["Serve (classic)", "Click or Space", "Tap"],
+        ["Pause", "P or Esc", "Pause button"],
+      ],
+      rules: [
+        "The guard only stops balls going up; balls coming down pass through it.",
+        "Where the ball hits the paddle or guard sets the angle: the middle sends it straight, the edges send it out sharply.",
+        "Each brick is 10 points.",
+      ],
+      tips: [
+        "Breaker: use the edges of the paddle for steep angles that slip past the guard.",
+        "Guard: keep blocking. Every block makes the guard slower, but you only lose when a brick breaks, and that resets it.",
+      ],
+    },
     modes: [
       { id: 'classic', you: 'Breaker (paddle)', cpu: 'The wall’s guard',
         touchHow: 'Drag your finger to move the paddle; tap to serve. Where the ball hits the paddle sets its angle. The purple guard swats the ball back but tires with every block in a row. 3 lives.',
@@ -63,7 +86,7 @@
       let ball, served, serveT, baseSpeed, paddle, guard, over = false;
       let pAI = { react: 0, err: 0, aim: 0, armed: false };
       let gAI = { react: 0, err: 0, aim: 0, armed: false };
-      let mouseUsed = false;
+      let mouseUsed = false, god = false;
       const rounds = mode === 'flipped' ? api.Rounds({ next: (lv) => newLevel(lv) }) : null;
       const guardY = () => BY0 + rows * (BH + GAP) + 34;
       const tire = () => Math.pow(0.82, guard.streak); // speed multiplier after repeated blocks
@@ -241,6 +264,7 @@
             api.sfx.pop();
             break;
           }
+          if (god && ball.vy > 0 && ball.y > H - R) { ball.y = H - R; ball.vy = -ball.vy; } // GOD cheat: a floor
           if (ball.y > H + R) return lost();
         }
         if (!bricks.some((b) => b.alive)) cleared();
@@ -276,6 +300,14 @@
       newLevel(1);
 
       return {
+        // Cheat codes. Flipped mode's LEVEL / SKIP / LIVES / GOD come from Rounds.
+        cheat(code, n) {
+          if (rounds) return;
+          if (code === 'SKIP') { cleared(); return `Level ${level}`; }
+          if (code === 'LEVEL') { newLevel(n); return `Level ${n}`; }
+          if (code === 'LIVES') { lives = 3; return 'Balls refilled'; }
+          if (code === 'GOD') { god = !god; return god ? 'God mode on: the ball bounces off the floor' : 'God mode off'; }
+        },
         pointerMove() { mouseUsed = true; },
         pointerDown() { mouseUsed = true; if (!cpuPaddle) serve(); },
         update(dt) {
