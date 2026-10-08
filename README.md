@@ -59,6 +59,7 @@ Every canvas game also has a **Watch** mode where the computer plays both sides.
 
   A double yellow line runs down the middle of the road.
 - **The bridge section is a real bridge** over a canyon river. Its jumps are spaced so your last jump has always landed before the next crack: every 2 beats, or every 4 at high tempo.
+- **Pickups glow:** notes, spare tires and nitro sit inside a pulsing, turning halo (gold, white, blue), so good drops never look like obstacles.
 - **Bosses:** every 5th stop is Area 51.
   - A flying saucer hovers at the top, gliding between lanes on the beat, with a theremin theme.
   - Its plasma orbs are the melody notes; its tractor beams land on the crash.
@@ -95,7 +96,7 @@ Each game has its own page: `/snake`, `/breakout`, `/splat`, `/asteroids`, `/mis
 
 ## How to play, and cheat codes for testing
 
-- **Guides:** every game's page has a **How to play** guide under the side buttons. It covers the goal, both sides, a controls table (keyboard/mouse and touch), the rules and some tips. While playing, the **How to play** button opens the same guide and pauses the game. Guides live in each game's `guide: {...}` in `js/games/*.js`.
+- **Guides:** every game's page has a **How to play** guide under the side buttons (on phones and tablets its controls table shows only the touch column). A game with only one side, like RocknRoller, gets a big **Play** button above the guide (and another at its end) instead of side cards, and has no *Switch side* button. It covers the goal, both sides, a controls table (keyboard/mouse and touch), the rules and some tips. While playing, the **How to play** button opens the same guide and pauses the game. Guides live in each game's `guide: {...}` in `js/games/*.js`.
 - **Cheats:** press **Cheats** while playing (it's also next to *Exit fullscreen* in fullscreen), type a code and press Enter. The game doesn't list the codes anywhere, so here they are (case-insensitive):
 
   | Code | What it does |

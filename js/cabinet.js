@@ -306,6 +306,29 @@
     $('#setup-tagline').textContent = def.tagline;
     const box = $('#setup-modes');
     box.innerHTML = '';
+    const single = def.modes.length === 1; // one side only (RocknRoller): a Play button, not side cards
+    box.classList.toggle('single', single);
+    $('#setup-guide').innerHTML = guideHTML(def);
+    if (single) {
+      const m = def.modes[0];
+      const playBtn = () => {
+        const b = document.createElement('button');
+        b.className = 'btn play-big';
+        b.textContent = '▶ Play';
+        b.addEventListener('click', () => start(def, m.id));
+        return b;
+      };
+      box.appendChild(playBtn());
+      const best = document.createElement('p');
+      best.className = 'single-best';
+      best.textContent = `Best: ${getBest(def.id, m.id)}`;
+      box.appendChild(best);
+      const end = document.createElement('div');
+      end.className = 'guide-play';
+      end.appendChild(playBtn());
+      $('#setup-guide').appendChild(end);
+      return;
+    }
     for (const m of def.modes) {
       const b = document.createElement('button');
       b.className = 'mode';
@@ -316,7 +339,6 @@
       b.addEventListener('click', () => start(def, m.id));
       box.appendChild(b);
     }
-    $('#setup-guide').innerHTML = guideHTML(def);
   }
 
   // ---- how-to-play guides: def.guide = { goal, sides: [[name, text]], controls: [[action, keys, touch]], rules: [], tips: [] }
@@ -328,8 +350,10 @@
     let h = `<h3>How to play ${esc(def.title)}</h3><p class="goal">${esc(g.goal)}</p>`;
     if (g.sides) h += `<h4>${esc(g.sidesTitle || 'The two sides')}</h4><ul>` + g.sides.map(([name, text]) => `<li><b>${esc(name)}</b>: ${esc(text)}</li>`).join('') + '</ul>';
     if (g.controls) {
-      h += '<h4>Controls</h4><div class="table-wrap"><table><tr><th>To</th><th>Keyboard / mouse</th><th>Touch</th></tr>';
-      h += g.controls.map((row) => '<tr>' + row.map((c) => `<td>${esc(c)}</td>`).join('') + '</tr>').join('') + '</table></div>';
+      // On a phone or tablet only the touch column matters (and the full table doesn't fit).
+      const touch = isTouch();
+      h += `<h4>Controls</h4><div class="table-wrap"><table class="${touch ? 'touch' : ''}"><tr><th>To</th>${touch ? '' : '<th>Keyboard / mouse</th>'}<th>Touch</th></tr>`;
+      h += g.controls.map(([to, keys, tap]) => `<tr><td>${esc(to)}</td>${touch ? '' : `<td>${esc(keys)}</td>`}<td>${esc(tap)}</td></tr>`).join('') + '</table></div>';
     }
     if (g.rules) h += '<h4>Rules</h4>' + list(g.rules);
     if (g.tips) h += '<h4>Tips</h4>' + list(g.tips);
@@ -426,6 +450,7 @@
     $('#play-help').textContent = howFor(mode) + (def.dom || isTouch() ? '' : '  (P / Esc pauses.)');
     buildTouchpad(mode);
     $('#btn-pause').hidden = !!def.dom;
+    $('#btn-side').hidden = def.modes.length === 1; // nothing to switch to
     canvas.hidden = !!def.dom;
     domStage.hidden = !def.dom;
     $('#arena').classList.toggle('dom-game', !!def.dom); // page-style games (Imitation) aren't locked to 4:3
@@ -599,7 +624,7 @@
     }
     showOverlay(result.title || 'GAME OVER', lines, [
       ['Play again', () => start(run.def, run.mode.id)],
-      ['Switch side', () => { stop(); openSetup(run.def); }, true],
+      ...(run.def.modes.length > 1 ? [['Switch side', () => { stop(); openSetup(run.def); }, true]] : []),
       ['Cabinet', () => go('/'), true],
     ]);
   }

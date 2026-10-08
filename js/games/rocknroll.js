@@ -328,7 +328,7 @@
         "Notes (♪) sit on the safe route. Follow them and nothing deadly is ever in your way.",
         "Jump tumbleweeds and cracked bridge planks; you always land exactly on a beat. Dodge wrecks, boulders, hay bales and the police.",
         "A hit costs a dent. 3 dents and you’re wrecked. The mechanic at each stop fixes one.",
-        "Pickups: a spare tire absorbs one hit; nitro makes the next chorus untouchable (you smash through everything); a full Groove meter (catch 12 notes) gives an ENCORE with double points.",
+        "Pickups glow inside a halo (obstacles never do): a spare tire absorbs one hit; nitro makes the next chorus untouchable (you smash through everything); a full Groove meter (catch 12 notes) gives an ENCORE with double points.",
         "Every 5th stop is an Area 51 boss. Notes are rare there, so at first a faint green trail shows the route. It fades with each boss and is gone from stop 20. Stay on the route and nothing hits you, and the RV shoots the saucer on the beat.",
         "Each stop is graded S / A / B / C on how many notes you caught and how often you were hit.",
       ],
@@ -1326,8 +1326,29 @@
         return U.lerp(px, nx, f * f * (3 - 2 * f));
       }
 
+      // Good drops (notes, spare tires, nitro) get a halo so they never read as obstacles: a soft
+      // glow disc and a dotted ring that swells on every beat and slowly turns. Obstacles never have one.
+      let haloPulse = 0, haloSpin = 0;
+      function halo(cx, cy, col, seed) {
+        const r = 6 + 1.5 * haloPulse;
+        bx.globalAlpha = 0.16 + 0.12 * haloPulse;
+        for (let dy = -Math.floor(r); dy <= r; dy++) {
+          const w = Math.round(Math.sqrt(r * r - dy * dy));
+          rect(cx - w, cy + dy, 2 * w, 1, col);
+        }
+        bx.globalAlpha = 0.65 + 0.35 * haloPulse;
+        const R = r + 1, a0 = haloSpin + seed;
+        for (let i = 0; i < 10; i++) {
+          const a = a0 + (i / 10) * Math.PI * 2;
+          rect(cx + Math.cos(a) * R - 0.5, cy + Math.sin(a) * R - 0.5, 1, 1, col);
+        }
+        bx.globalAlpha = 1;
+      }
+
       function drawWorld(beat, env) {
         const frac = beat - Math.floor(beat);
+        haloPulse = Math.max(0, 1 - frac * 2.5);
+        haloSpin = beat * 0.6;
         const scroll = beat * song.row;
         const bar = Math.floor(beat / 4);
         const sec = sectionOf(Math.max(0, bar)).type;
@@ -1494,9 +1515,9 @@
               if (deck && open > 0.9) for (let xx = ROAD_L + 3; xx < ROAD_R - 3; xx += 9) rect(xx, y - 6 + (xx % 3), 3, 2, '#6b5240');
             } });
           } else if (e.type === 'note' && !e.got) {
-            draws.push({ y, f: () => spr('note', x, y - 2 - 3 * env.note, 1 + 0.2 * env.note, 1 + 0.2 * env.note) });
-          } else if (e.type === 'spare' && !e.got) draws.push({ y, f: () => spr('spare', x, y - 2 * env.kick) });
-          else if (e.type === 'nitro' && !e.got) draws.push({ y, f: () => spr('nitro', x, y - 2 * env.kick) });
+            draws.push({ y, f: () => { halo(x, y - 6, '#ffd23a', e.n); spr('note', x, y - 2 - 3 * env.note, 1 + 0.2 * env.note, 1 + 0.2 * env.note); } });
+          } else if (e.type === 'spare' && !e.got) draws.push({ y, f: () => { halo(x, y - 4, '#ffffff', e.n); spr('spare', x, y - 2 * env.kick); } });
+          else if (e.type === 'nitro' && !e.got) draws.push({ y, f: () => { halo(x, y - 5, '#5ad1ff', e.n); spr('nitro', x, y - 2 * env.kick); } });
           else if (e.type === 'finish') {
             draws.push({ y: y - 60, f: () => { for (let xx = ROAD_L; xx < ROAD_R; xx += 4) for (let r = 0; r < 2; r++) rect(xx, y - 6 + r * 3, 4, 3, ((xx - ROAD_L) / 4 + r) % 2 ? '#111' : '#fff'); } });
           }

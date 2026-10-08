@@ -82,6 +82,10 @@ footer { text-align: center; color: var(--dim); padding: 16px; font-size: 18px; 
 #setup h2 { font-family: var(--pixel); font-size: 24px; margin: 18px 0 6px; color: var(--c, var(--accent)); }
 .tagline { color: var(--dim); margin: 0 0 18px; }
 .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.modes.single { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.play-big { font-size: 20px; padding: 14px 44px; }
+.single-best { margin: 0; color: var(--dim); }
+.guide-play { display: flex; justify-content: center; margin-top: 18px; }
 .mode {
   background: var(--panel);
   border: 2px solid #2d2963;
@@ -305,6 +309,7 @@ body.no-scroll { overflow: hidden; }
 .guide li { margin: 3px 0; }
 .guide .table-wrap { overflow-x: auto; }
 .guide table { border-collapse: collapse; width: 100%; min-width: 420px; }
+.guide table.touch { min-width: 0; }
 .guide th, .guide td { text-align: left; padding: 4px 10px; border-bottom: 1px solid #2d2963; vertical-align: top; }
 .guide th { color: var(--dim); font-weight: normal; }
 #overlay .guide.in-overlay h3 { display: none; } /* the overlay already says HOW TO PLAY */
