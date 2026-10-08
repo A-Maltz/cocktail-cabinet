@@ -159,7 +159,7 @@
   }
 
   // ---------------------------------------------------------------- runtime state
-  const Cabinet = { W, H, U, Draw, SFX, Rounds, games, register, boot, start, tone, isMuted: () => muted };
+  const Cabinet = { W, H, U, Draw, SFX, Rounds, games, register, boot, start, tone, isMuted: () => muted, debug: () => current }; // debug: read-only peek for tests
   window.Cabinet = Cabinet;
 
   function register(def) { games.push(def); }
@@ -185,6 +185,7 @@
     route();
   }
   function route() {
+    exitFullscreen();
     stop();
     const slug = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '').toLowerCase();
     const def = slug && games.find((g) => slugOf(g) === slug);
@@ -223,7 +224,11 @@
 
     document.querySelectorAll('[data-go]').forEach((el) => el.addEventListener('click', () => go('/')));
     $('#btn-menu').addEventListener('click', () => go('/'));
-    $('#btn-side').addEventListener('click', () => { const g = current && current.def; stop(); if (g) openSetup(g); });
+    $('#btn-side').addEventListener('click', () => { const g = current && current.def; exitFullscreen(); stop(); if (g) openSetup(g); });
+    $('#btn-fs').addEventListener('click', () => (isFullscreen() ? exitFullscreen() : enterFullscreen()));
+    $('#fs-exit').addEventListener('click', () => exitFullscreen());
+    document.addEventListener('fullscreenchange', paintFullscreen);
+    document.addEventListener('webkitfullscreenchange', paintFullscreen);
     $('#btn-pause').addEventListener('click', () => togglePause());
     const muteBtn = $('#btn-mute');
     const paintMute = () => { muteBtn.textContent = muted ? 'Sound off' : 'Sound on'; };
@@ -298,7 +303,7 @@
       b.className = 'mode';
       const best = getBest(def.id, m.id);
       b.innerHTML = `<div class="who">You: <b>${m.you}</b><br>Computer: <i>${m.cpu}</i></div>
-        <div class="how">${m.how}</div>
+        <div class="how">${howFor(m)}</div>
         <div class="best">${m.id === 'demo' ? 'Sit back and watch.' : `Best: ${best}`}</div>`;
       b.addEventListener('click', () => start(def, m.id));
       box.appendChild(b);
@@ -331,10 +336,12 @@
     play.style.setProperty('--c', def.color);
     $('#stage').style.setProperty('--c', def.color);
     $('#play-title').textContent = `${def.title} · you: ${mode.you}`;
-    $('#play-help').textContent = mode.how + (def.dom ? '' : '  (P / Esc pauses.)');
+    $('#play-help').textContent = howFor(mode) + (def.dom || isTouch() ? '' : '  (P / Esc pauses.)');
+    buildTouchpad(mode);
     $('#btn-pause').hidden = !!def.dom;
     canvas.hidden = !!def.dom;
     domStage.hidden = !def.dom;
+    $('#arena').classList.toggle('dom-game', !!def.dom); // page-style games (Imitation) aren't locked to 4:3
     domStage.innerHTML = '';
     overlay.hidden = true;
     input.keys.clear();
@@ -346,6 +353,75 @@
     lastT = performance.now();
     acc = 0;
     raf = requestAnimationFrame(frame);
+  }
+
+  // ---- touch devices: on-screen buttons that press the same keys the keyboard would
+  const isTouch = () => (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0;
+  const howFor = (mode) => (isTouch() && mode.touchHow) || mode.how;
+  function pressKey(code) {
+    if (!current || current.paused || current.over) return;
+    if (!input.keys.has(code)) input.pressed.add(code);
+    input.keys.add(code);
+    if (current.inst.keyDown) current.inst.keyDown(code);
+  }
+  const releaseKey = (code) => input.keys.delete(code);
+  // mode.touch = { left: [buttons], right: [buttons] }; a button is { label, key, wide?, toggle? }
+  function buildTouchpad(mode) {
+    const pad = $('#touchpad');
+    pad.innerHTML = '';
+    pad.hidden = !mode.touch || !isTouch();
+    if (pad.hidden) return;
+    for (const side of ['left', 'right']) {
+      const group = document.createElement('div');
+      group.className = 'pad-group';
+      for (const b of mode.touch[side] || []) {
+        const el = document.createElement('button');
+        el.className = 'pad' + (b.wide ? ' wide' : '');
+        el.textContent = b.label;
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
+        if (b.toggle) {
+          el.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            const on = !el.classList.contains('on');
+            el.classList.toggle('on', on);
+            if (on) pressKey(b.key); else releaseKey(b.key);
+          });
+        } else {
+          const up = () => { el.classList.remove('on'); releaseKey(b.key); };
+          el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add('on'); pressKey(b.key); });
+          el.addEventListener('pointerup', up);
+          el.addEventListener('pointercancel', up);
+          el.addEventListener('lostpointercapture', up);
+        }
+        group.appendChild(el);
+      }
+      pad.appendChild(group);
+    }
+  }
+
+  // ---- fullscreen: the browser's real fullscreen where allowed, else fill the window (iPhone)
+  const realFs = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const isFullscreen = () => !!realFs() || $('#arena').classList.contains('fake-fs');
+  function paintFullscreen() {
+    if (!realFs() && !$('#arena').classList.contains('fake-fs')) document.body.classList.remove('no-scroll');
+    $('#btn-fs').textContent = isFullscreen() ? 'Exit fullscreen' : 'Fullscreen';
+  }
+  async function enterFullscreen() {
+    const arena = $('#arena');
+    const req = arena.requestFullscreen || arena.webkitRequestFullscreen;
+    let ok = false;
+    if (req) { try { await req.call(arena); ok = true; } catch (e) { ok = false; } }
+    if (ok) { try { await screen.orientation.lock('landscape'); } catch (e) { /* not supported: fine */ } }
+    else { arena.classList.add('fake-fs'); document.body.classList.add('no-scroll'); }
+    paintFullscreen();
+  }
+  function exitFullscreen() {
+    const arena = $('#arena');
+    if (!arena) return;
+    if (realFs()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) { /* */ } }
+    arena.classList.remove('fake-fs');
+    document.body.classList.remove('no-scroll');
+    paintFullscreen();
   }
 
   function stop() {

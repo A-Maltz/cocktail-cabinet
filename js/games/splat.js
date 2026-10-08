@@ -53,8 +53,10 @@
     flip: 'you lay out the columns, the computer flies.',
     modes: [
       { id: 'classic', you: 'Bird', cpu: 'Column builder',
+        touchHow: 'Tap anywhere to flap. The computer places every gap: gentle at first, then bigger swings and tighter gaps.',
         how: 'Space, Up, W or click to flap. The computer places every gap. It starts gentle, then swings the gaps further and squeezes them tighter.' },
       { id: 'flipped', you: 'Column builder', cpu: 'Bird',
+        touchHow: 'Drag up and down to set the next gap; it locks when the column appears. Make the bird splat before it clears 12 columns. 3 hearts.',
         how: 'Move the mouse up and down (or use the arrow keys) to set the next gap; it locks when the column appears. A gap can move at most 265px from the last one. Make the bird splat before it clears 12 columns. 3 hearts.' },
       { id: 'demo', you: 'Spectator', cpu: 'Bird and builder', how: 'The computer plays both sides.' },
     ],

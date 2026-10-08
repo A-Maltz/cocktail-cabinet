@@ -30,8 +30,11 @@
     flip: 'you launch the missiles, the computer defends.',
     modes: [
       { id: 'classic', you: 'Defender', cpu: 'Attacker',
+        touchHow: 'Tap to fire an interceptor at that spot; it explodes there. The nearest battery with ammo fires. Each battery has 10 shots per wave. Lose all six cities and it’s over.',
         how: 'Click to fire an interceptor at that spot; it explodes there. The nearest battery with ammo fires (or press A / S / D to pick the left, centre or right battery). Each battery has 10 shots per wave. Lose all six cities and it’s over.' },
       { id: 'flipped', you: 'Attacker', cpu: 'Defender',
+        touch: { right: [{ label: 'MIRV', key: 'ShiftLeft', toggle: true, wide: true }] },
+        touchHow: 'Drag from a point in the sky to where the missile should land, and let go. Turn MIRV on to launch splitting missiles (cost 2). Flatten 3 cities in a wave to win it. 3 hearts.',
         how: 'Press along the sky to pick a launch point, drag to where it should land, release. Right-click or hold Shift to launch a MIRV (costs 2, splits into 3 halfway down). Flatten 3 cities in a wave to win it; the defender gets sharper every wave you win. 3 hearts.' },
       { id: 'demo', you: 'Spectator', cpu: 'Attacker and defender', how: 'The computer plays both sides.' },
     ],
@@ -226,7 +229,7 @@
             if (y < GROUND - 20) fireFrom(nearestBattery(x), x, y);
             return;
           }
-          if (!cpuAtk) aim = { x0: x, x1: x, mirv: button === 2 || (e && e.shiftKey) };
+          if (!cpuAtk) aim = { x0: x, x1: x, mirv: button === 2 || (e && e.shiftKey) || api.keys.has('ShiftLeft') }; // ShiftLeft = the MIRV touch toggle
         },
         pointerMove(x) { if (aim) aim.x1 = x; },
         pointerUp(x) {

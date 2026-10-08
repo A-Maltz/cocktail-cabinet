@@ -38,8 +38,12 @@
     flip: 'you throw the asteroids, the computer flies.',
     modes: [
       { id: 'classic', you: 'Ship', cpu: 'Asteroid sender',
+        touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'THRUST', key: 'ArrowUp', wide: true }, { label: 'FIRE', key: 'Space', wide: true }] },
+        touchHow: 'Hold ◀ ▶ to turn, THRUST to fly, FIRE to shoot. The computer sends each wave: big slow rocks first, then faster, aimed, smaller ones. 3 lives.',
         how: 'Left/Right (or A/D) turn, Up/W thrusts, Space fires. The computer sends each wave: big slow rocks at first, then faster, aimed, smaller ones. 3 lives.' },
       { id: 'flipped', you: 'Asteroid sender', cpu: 'Ship',
+        touch: { right: [{ label: 'SMALL', key: 'Digit1', wide: true }, { label: 'MED', key: 'Digit2', wide: true }, { label: 'BIG', key: 'Digit3', wide: true }] },
+        touchHow: 'Pick SMALL / MED / BIG, then drag from at least 170px away from the ship and let go to fling a rock (a plain tap lobs it at the ship). Rocks cost energy. Destroy the ship 3 times within 45 seconds. 3 hearts.',
         how: 'Press 1 / 2 / 3 (or Q to cycle) to choose a size. Drag from anywhere at least 170px from the ship and release to fling a rock (a plain click lobs it at the ship). Rocks cost energy. Destroy the ship 3 times within 45 seconds to win the round. 3 hearts.' },
       { id: 'demo', you: 'Spectator', cpu: 'Ship and sender', how: 'The computer plays both sides.' },
     ],

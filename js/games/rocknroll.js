@@ -311,6 +311,8 @@
     badge: 'Original · rhythm runner',
     modes: [
       { id: 'classic', you: 'RV driver', cpu: 'The desert (and the band)',
+        touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'JUMP', key: 'Space', wide: true }] },
+        touchHow: 'Every stop is a new one-minute song, faster than the last. Follow the notes: they sit on the safe route. Hold ◀ ▶ to slide between lanes, JUMP to hop (you always land on a beat). Grab notes, spare tires and nitro; jump tumbleweeds and broken planks. Every 5th stop is an Area 51 boss: stay on the route under the saucer to shoot it.',
         how: 'Every stop is a new one-minute song, 16 BPM faster than the last. Follow the notes: they sit on the planned route, and nothing deadly is ever on it. Hold Left/Right (A/D) to slide between 4 lanes, Up/W/Space to jump (you always land on a beat). Grab notes for the Groove meter (ENCORE!), spare tires for a shield, nitro for an untouchable chorus. Jump tumbleweeds and cracked bridge planks; dodge wrecks, boulders and the police. Every 5th stop is Area 51: stay on the route under the saucer and the RV shoots it on the beat. 3 dents and you’re wrecked.' },
     ],
 

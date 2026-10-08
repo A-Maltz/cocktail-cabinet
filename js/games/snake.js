@@ -62,6 +62,8 @@
     flip: 'you place the apples, the computer steers.',
     modes: [
       { id: 'classic', you: 'Snake', cpu: 'Apple placer',
+        touch: { left: [{ label: '\u25c0', key: 'ArrowLeft' }, { label: '\u25b6', key: 'ArrowRight' }], right: [{ label: '\u25b2', key: 'ArrowUp' }, { label: '\u25bc', key: 'ArrowDown' }] },
+        touchHow: 'Steer with the arrow buttons. The computer picks where each apple lands and gets sneakier as you grow, but it never places one that is a guaranteed death trap.',
         how: 'Steer with the arrow keys or WASD. The computer picks where each apple lands and gets sneakier as you grow, but it never places one that is a guaranteed death trap.' },
       { id: 'flipped', you: 'Apple placer', cpu: 'Snake',
         how: 'Click a square to drop the next apple (it must be 4+ squares from the head and reachable). Make the snake crash or starve before it eats its quota. Each round the snake gets smarter. 3 hearts.' },

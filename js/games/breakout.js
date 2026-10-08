@@ -46,8 +46,10 @@
     flip: 'you guard the wall, the computer breaks it.',
     modes: [
       { id: 'classic', you: 'Breaker (paddle)', cpu: 'The wall’s guard',
+        touchHow: 'Drag your finger to move the paddle; tap to serve. Where the ball hits the paddle sets its angle. The purple guard swats the ball back but tires with every block in a row. 3 lives.',
         how: 'Move the paddle with the mouse or arrow keys; click or Space to serve. Where the ball hits the paddle sets its angle. The purple guard under the bricks swats the ball back, but it tires with every block in a row. Beat it with sharp angles. 3 lives.' },
       { id: 'flipped', you: 'The wall’s guard', cpu: 'Breaker (paddle)',
+        touchHow: 'Drag your finger to move the purple guard. Block the ball on its way up and angle it away from the paddle. Make the computer drop 3 balls before it clears the wall. 3 hearts.',
         how: 'Move the purple guard with the mouse or arrow keys. Block the ball on its way up and angle it back where the paddle isn’t. Each block in a row tires the guard until a brick breaks. Make the computer drop 3 balls before it clears the wall. 3 hearts.' },
       { id: 'demo', you: 'Spectator', cpu: 'Paddle and guard', how: 'The computer plays both sides.' },
     ],

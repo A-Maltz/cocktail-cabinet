@@ -26,7 +26,7 @@ body {
   flex-direction: column;
 }
 
-button { font: inherit; color: inherit; cursor: pointer; }
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
 
 /* ---------- marquee ---------- */
 .marquee { text-align: center; padding: 28px 16px 8px; }
@@ -186,4 +186,104 @@ footer { text-align: center; color: var(--dim); padding: 16px; font-size: 18px; 
   body { font-size: 19px; }
   .imit { font-size: 18px; }
   .msg { max-width: 88%; }
+}
+
+/* ---------- touch buttons (shown on touch devices only) ---------- */
+#touchpad {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 800px;
+  margin: 12px auto 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+#touchpad[hidden] { display: none; }
+.pad-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.pad {
+  min-width: 64px;
+  height: 64px;
+  padding: 0 14px;
+  border-radius: 16px;
+  border: 2px solid var(--c, var(--accent));
+  background: rgba(19, 17, 42, .85);
+  color: var(--ink);
+  font-family: var(--pixel);
+  font-size: 15px;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pad.wide { min-width: 108px; }
+.pad.on { background: var(--c, var(--accent)); color: #12001a; }
+
+/* ---------- fullscreen (the browser's, or a fill-the-window fallback for iPhone) ---------- */
+#arena { position: relative; }
+#fs-exit { display: none; }
+#arena:fullscreen, #arena.fake-fs {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+#arena:-webkit-full-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; }
+#arena:fullscreen #stage, #arena.fake-fs #stage, #arena:-webkit-full-screen #stage {
+  width: min(100vw, calc(100vh * 4 / 3));
+  width: min(100vw, calc(100dvh * 4 / 3));
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+}
+#arena:fullscreen #touchpad, #arena.fake-fs #touchpad, #arena:-webkit-full-screen #touchpad {
+  position: absolute;
+  left: 0; right: 0; bottom: 14px;
+  margin: 0;
+  max-width: none;
+  padding: 0 14px;
+  pointer-events: none;
+}
+#arena:fullscreen .pad, #arena.fake-fs .pad, #arena:-webkit-full-screen .pad { pointer-events: auto; opacity: .82; }
+#arena:fullscreen #fs-exit, #arena.fake-fs #fs-exit, #arena:-webkit-full-screen #fs-exit {
+  display: block;
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  z-index: 3;
+  opacity: .85;
+}
+body.no-scroll { overflow: hidden; }
+
+@media (max-width: 600px) {
+  main { padding: 10px; }
+  .bar { gap: 6px; }
+  .chip { font-size: 17px; padding: 3px 10px; }
+  #play-title { flex-basis: 100%; order: -1; }
+}
+
+/* Sideways phone in fullscreen: the game is letterboxed, so stack the buttons in the side bars. */
+@media (orientation: landscape) {
+  #arena:fullscreen #touchpad, #arena.fake-fs #touchpad, #arena:-webkit-full-screen #touchpad {
+    top: 0; bottom: 0;
+    align-items: center;
+    padding: 0 max(10px, env(safe-area-inset-left, 0px));
+  }
+  #arena:fullscreen .pad-group, #arena.fake-fs .pad-group, #arena:-webkit-full-screen .pad-group {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+}
+
+/* Page-style games (Imitation's chat) use the room they're given instead of a 4:3 box. */
+@media (max-width: 700px) {
+  #arena.dom-game #stage { aspect-ratio: auto; height: 72vh; height: 72dvh; }
+}
+#arena.dom-game:fullscreen #stage, #arena.dom-game.fake-fs #stage, #arena.dom-game:-webkit-full-screen #stage {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  aspect-ratio: auto;
 }

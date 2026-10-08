@@ -40,11 +40,17 @@
         <span class="spacer"></span>
         <button id="btn-pause" class="chip">Pause</button>
         <button id="btn-mute" class="chip">Sound on</button>
+        <button id="btn-fs" class="chip">Fullscreen</button>
       </div>
-      <div id="stage">
-        <canvas id="screen" width="800" height="600"></canvas>
-        <div id="dom-stage" hidden></div>
-        <div id="overlay" hidden></div>
+      <!-- The arena is what goes fullscreen: the game plus its touch buttons. -->
+      <div id="arena">
+        <div id="stage">
+          <canvas id="screen" width="800" height="600"></canvas>
+          <div id="dom-stage" hidden></div>
+          <div id="overlay" hidden></div>
+        </div>
+        <div id="touchpad" hidden></div>
+        <button id="fs-exit" class="chip">&#x2715; Exit fullscreen</button>
       </div>
       <p id="play-help" class="help"></p>
     </section>

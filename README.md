@@ -75,6 +75,23 @@ Every canvas game also has a **Watch** mode where the computer plays both sides.
 
 Each game has its own page: `/snake`, `/breakout`, `/splat`, `/asteroids`, `/missile-command`, `/invaders`, `/imitation`, `/rocknroller`. (The engine also supports `hidden: true` on a game: no menu card, but its address still works.) Netlify serves `index.html` for every path that isn't a real file (`netlify.toml`), and `route()` in `js/cabinet.js` opens the right game. To serve locally with the same behaviour you need a server that falls back to `index.html`; with `python -m http.server`, only `/` works.
 
+## Fullscreen and mobile
+
+- **Fullscreen:** every game has a **Fullscreen** button. It uses the browser's real fullscreen where allowed (and tries to rotate phones to landscape); on iPhone, which doesn't allow that for web pages, it falls back to filling the window. Canvas games keep 4:3 and letterbox; Imitation's chat uses the whole screen.
+- **Touch:** taps and drags work wherever a game uses the mouse. Keyboard-only controls get on-screen buttons on touch devices:
+
+  | Game | Buttons |
+  |---|---|
+  | Snake | ◀ ▶ ▲ ▼ |
+  | Asteroids (you fly) | ◀ ▶ THRUST FIRE |
+  | Asteroids (you send rocks) | SMALL / MED / BIG |
+  | Missile Command (you attack) | MIRV toggle |
+  | Space Invaders (you're the cannon) | ◀ ▶ FIRE |
+  | RocknRoller | ◀ ▶ JUMP |
+
+  The buttons press the same keys the keyboard would, so the games didn't change.
+- **How to add buttons:** a mode declares `touch: { left: [...], right: [...] }` and a `touchHow` instruction text shown on touch devices.
+
 ## Running it
 
 It's plain HTML/CSS/JS with no build step. Open `index.html`, or serve the folder:

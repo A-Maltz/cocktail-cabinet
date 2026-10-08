@@ -43,8 +43,11 @@
     flip: 'you order the fleet to fire, the computer defends.',
     modes: [
       { id: 'classic', you: 'Cannon', cpu: 'Fleet commander',
+        touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'FIRE', key: 'Space', wide: true }] },
+        touchHow: 'Hold ◀ ▶ to move and FIRE to shoot (one shot on screen at a time). The computer decides which invader fires and gets better at predicting where you’ll be. 3 lives.',
         how: 'Left/Right or A/D to move, Space to fire (one shot on screen at a time). The computer decides which invader fires and gets better at predicting where you’ll be. 3 lives.' },
       { id: 'flipped', you: 'Fleet commander', cpu: 'Cannon',
+        touchHow: 'Tap on or under a column to make its lowest invader fire. Only a few bullets can be in the air at once. Destroy the cannon 3 times, or land the fleet. 3 hearts.',
         how: 'Click under or on a column (or press Space with the mouse over it) to make its lowest invader fire. Only a few bullets can be in the air at once. Destroy the cannon 3 times, or land the fleet, before it wipes you out. 3 hearts.' },
       { id: 'demo', you: 'Spectator', cpu: 'Cannon and fleet', how: 'The computer plays both sides.' },
     ],
