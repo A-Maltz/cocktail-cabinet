@@ -159,7 +159,7 @@
   }
 
   // ---------------------------------------------------------------- runtime state
-  const Cabinet = { W, H, U, Draw, SFX, Rounds, games, register, boot, start, tone };
+  const Cabinet = { W, H, U, Draw, SFX, Rounds, games, register, boot, start, tone, isMuted: () => muted };
   window.Cabinet = Cabinet;
 
   function register(def) { games.push(def); }
@@ -189,7 +189,7 @@
       b.className = 'card';
       b.style.setProperty('--c', g.color);
       b.innerHTML = `<span class="num">${String(i + 1).padStart(2, '0')}</span>
-        <h3>${g.title}</h3><p>${g.tagline}</p><p class="flip">Flip: ${g.flip}</p>`;
+        <h3>${g.title}</h3><p>${g.tagline}</p><p class="flip">${g.flip ? `Flip: ${g.flip}` : g.badge || ''}</p>`;
       b.addEventListener('click', () => openSetup(g));
       grid.appendChild(b);
     });
@@ -380,6 +380,7 @@
   function pause(force) {
     if (!current || current.over) return;
     current.paused = force === undefined ? !current.paused : force;
+    if (current.inst.setPaused) current.inst.setPaused(current.paused); // e.g. pause a game's own music
     $('#btn-pause').textContent = current.paused ? 'Resume' : 'Pause';
     if (current.paused) {
       showOverlay('PAUSED', ['Press P or Esc to resume.'], [

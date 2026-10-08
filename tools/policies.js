@@ -37,4 +37,26 @@ module.exports = {
   'invaders:flipped:spam'(inst, api, t) {
     if (Math.floor(t * 60) % 10 === 0) inst.pointerDown(100 + Math.random() * 600);
   },
+  // RocknRoll drivers follow the game's planned route (the trail) and jump tumbleweeds and cracks.
+  // They read the game's __debug() view, like a player reading the trail on screen.
+  'rocknroll:classic:perfect'(inst, api, t, keys, pressed) { rnrDrive(inst, keys, pressed, false, t, 0); },
+  // Holds jump down the whole time: holding should NOT make you immune (landings sit on beats).
+  'rocknroll:classic:holdjump'(inst, api, t, keys, pressed) { rnrDrive(inst, keys, pressed, true, t, 0); },
+  // Human-paced: changes lane at most once every 0.3 s.
+  'rocknroll:classic:human'(inst, api, t, keys, pressed) { rnrDrive(inst, keys, pressed, false, t, 0.3); },
 };
+
+let rnrLastMove = -99;
+function rnrDrive(inst, keys, pressed, holdJump, t, cooldown) {
+  const s = inst.__debug();
+  if (s.S.phase !== 'play') { pressed.add('Space'); return; } // results screen: drive on
+  const n = Math.floor(s.bp * 4);
+  const target = s.routeLane(n + 3), cur = s.rv.lane;
+  if (target !== cur && t - rnrLastMove >= cooldown) { pressed.add(target < cur ? 'ArrowLeft' : 'ArrowRight'); rnrLastMove = t; }
+  if (holdJump) { keys.add('Space'); return; }
+  for (const e of s.events) {
+    if (e.done || !(e.type === 'crack' || (e.type === 'land' && e.lane === cur))) continue;
+    const ahead = e.beat - s.bp;
+    if (ahead > 0.1 && ahead < 0.6) { pressed.add('Space'); break; }
+  }
+}

@@ -14,6 +14,63 @@ Seven arcade games on one static page. In every game a human or the computer can
 
 Every canvas game also has a **Watch** mode where the computer plays both sides.
 
+**Bonus, game 8: RocknRoller** (original, single-player for now; code in `js/games/rocknroll.js`). A tour of the Nevada desert in an RV. Every stop is a brand-new song of about a minute, generated in the browser by an algorithm (not an AI model).
+
+**The core rule: if it's on screen it's on the beat, and every note is an element.**
+
+- **Variety:** each song picks a style, never the same one twice in a row:
+
+  | Style | Sound |
+  |---|---|
+  | Spaghetti Gallop | the original desert sound |
+  | Surf Rocket | surf beat, tremolo-picked guitar |
+  | Desert Boogie | swung shuffle, walking bass, harmonica |
+  | Neon Motorik | four-on-the-floor, synth arpeggios |
+  | Ghost Town Doom | half-time fuzz |
+  | Train Beat | country boom-chick, chicken-pickin' lead |
+
+  Each style has its own scale, progressions, drums, bass and chord instruments. Key, structure and melody rhythms are random on top, and each section picks a lead instrument from the style's palette (often doubled an octave up in the chorus). Swung styles swing the obstacles too.
+- **Instruments:** guitar, surf guitar, trumpet, pedal steel, harmonica, electric piano, synth, chiptune, fuzz guitar, banjo, fiddle, marimba, combo organ, whistle and theremin.
+- **How it's synthesized:**
+  - plucked strings use Karplus-Strong synthesis (a burst of noise in a short feedback loop, like a vibrating string)
+  - cymbals are 808-style metallic square-wave clusters
+  - synths use detuned layers with filter sweeps
+  - the mix has a generated reverb room, an echo, stereo placement and a compressor
+- **Longer songs** get a solo before the last chorus (a note-rain section on the route) and a pre-chorus with a snare-roll build.
+- **Fast songs stay musical:** above 180 BPM melodies are written in half time, and above about 200 BPM the band plays on an 8th-note grid.
+- **Speed:** +16 BPM a stop, 100 → 240. Faster songs get more sections, so each still lasts about a minute. Every human limit is measured in seconds, so the game stays fair as it speeds up: lane-change spacing (≥ 0.36 s), slide window (0.3 s), clear space around the route (0.1 s) and jump lead time (0.33 s).
+- **The pressure rises every stop:**
+  - each stop has an obstacle target: about 1.3/s at stop 1, +0.3/s per stop, up to 4.5/s (jump obstacles count too)
+  - the route must change lanes at least every 2.6 s at stop 1, tightening to every 0.8 s
+  - where the melody is too sparse to supply that, the rhythm section does: hay bales land on chord hits, then bass notes, then kick and snare hits
+  - measured over full tours: about 1.3 → 2.8 → 3.4 → 4.4 obstacles/s at stops 1 → 4 → 8 → 12+
+- **One source of truth:** `stepEvents(n)` says what the band plays on every 16th note. The audio, the visuals and the obstacle charting all read from it.
+- **A planned route:** it follows the melody across 4 lanes and isn't drawn. The note pickups sit on it and the cacti push you along it. Nothing harmful is ever placed on it.
+- **Every instrument has a job:**
+
+  | Sound | On screen |
+  |---|---|
+  | Crash cymbal | car wreck |
+  | Tom fill | boulders |
+  | Shaker | tumbleweeds (choruses only) |
+  | Bridge sub-drop and snare | the bridge's planks cracking (jump) |
+  | Siren | police from behind |
+  | Kick / snare / hats / bass / chords / melody | road thump, rumble strips, sparkles, suspension, swaying props, cacti |
+
+  A double yellow line runs down the middle of the road.
+- **The bridge section is a real bridge** over a canyon river. Its jumps are spaced so your last jump has always landed before the next crack: every 2 beats, or every 4 at high tempo.
+- **Bosses:** every 5th stop is Area 51.
+  - A flying saucer hovers at the top, gliding between lanes on the beat, with a theremin theme.
+  - Its plasma orbs are the melody notes; its tractor beams land on the crash.
+  - Following the route dodges everything and lines you up under it. On the kick (beats 1 and 3) the RV fires automatically if you're lined up.
+  - Shoot it down and it explodes on the next downbeat.
+- **Jumps** always land exactly on a beat.
+- **Every sound effect is in key.**
+- **Rewards:**
+  - Groove meter → ENCORE: a guitar solo and double points
+  - spare tire: a one-hit shield
+  - nitro: an untouchable chorus with double points (no key change)
+
 ## Running it
 
 It's plain HTML/CSS/JS with no build step. Open `index.html`, or serve the folder:
