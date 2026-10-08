@@ -62,6 +62,7 @@ Every canvas game also has a **Watch** mode where the computer plays both sides.
 - **Bosses:** every 5th stop is Area 51.
   - A flying saucer hovers at the top, gliding between lanes on the beat, with a theremin theme.
   - Its plasma orbs are the melody notes; its tractor beams land on the crash.
+  - Notes are sparse during the fight, so a faint green dotted trail shows the planned route (only on boss stages, only while the saucer is alive). It's training wheels: full at the stop-5 boss, fainter and shorter at stops 10 and 15, and gone from stop 20, where you read the fight yourself.
   - Following the route dodges everything and lines you up under it. On the kick (beats 1 and 3) the RV fires automatically if you're lined up.
   - Shoot it down and it explodes on the next downbeat.
 - **Jumps** always land exactly on a beat.
@@ -95,7 +96,7 @@ Each game has its own page: `/snake`, `/breakout`, `/splat`, `/asteroids`, `/mis
 ## How to play, and cheat codes for testing
 
 - **Guides:** every game's page has a **How to play** guide under the side buttons. It covers the goal, both sides, a controls table (keyboard/mouse and touch), the rules and some tips. While playing, the **How to play** button opens the same guide and pauses the game. Guides live in each game's `guide: {...}` in `js/games/*.js`.
-- **Cheats:** press **Cheats** while playing (it's also next to *Exit fullscreen* in fullscreen), type a code and press Enter. Codes are case-insensitive:
+- **Cheats:** press **Cheats** while playing (it's also next to *Exit fullscreen* in fullscreen), type a code and press Enter. The game doesn't list the codes anywhere, so here they are (case-insensitive):
 
   | Code | What it does |
   |---|---|

@@ -53,6 +53,8 @@
   const HOLD_DELAY = 0.16, HOLD_REPEAT = 0.085;       // held-key auto-repeat
   const GROOVE_FULL = 12, ENCORE_BARS = 2;
   const BOSS_EVERY = 5;
+  // Boss route trail: full at the 1st boss (stop 5), 2/3 at the 2nd, 1/3 at the 3rd, none from stop 20.
+  const trailStrength = (k) => Math.max(0, 1 - (k / BOSS_EVERY - 1) / 3);
   // Human limits, in seconds (so they hold at any tempo)
   const MIN_MOVE_GAP = 0.36;  // the route never asks for two lane changes closer than this
   const SLIDE_WINDOW = 0.3;   // time you get to slide into the next lane
@@ -327,7 +329,7 @@
         "Jump tumbleweeds and cracked bridge planks; you always land exactly on a beat. Dodge wrecks, boulders, hay bales and the police.",
         "A hit costs a dent. 3 dents and you’re wrecked. The mechanic at each stop fixes one.",
         "Pickups: a spare tire absorbs one hit; nitro makes the next chorus untouchable (you smash through everything); a full Groove meter (catch 12 notes) gives an ENCORE with double points.",
-        "Every 5th stop is an Area 51 boss: stay on the route under the saucer and the RV shoots it on the beat.",
+        "Every 5th stop is an Area 51 boss. Notes are rare there, so at first a faint green trail shows the route. It fades with each boss and is gone from stop 20. Stay on the route and nothing hits you, and the RV shoots the saucer on the beat.",
         "Each stop is graded S / A / B / C on how many notes you caught and how often you were hit.",
       ],
       tips: [
@@ -335,16 +337,11 @@
         "The notes show where the route goes next, so move as soon as they shift lanes.",
       ],
     },
-    cheats: [
-      "BOSS: jump to the next Area 51 boss",
-      "ENCORE: double points right now",
-      "NITRO: smash through everything for the rest of this song",
-    ],
     modes: [
       { id: 'classic', you: 'RV driver', cpu: 'The desert (and the band)',
         touch: { left: [{ label: '◀', key: 'ArrowLeft' }, { label: '▶', key: 'ArrowRight' }], right: [{ label: 'JUMP', key: 'Space', wide: true }] },
-        touchHow: 'Every stop is a new one-minute song, faster than the last. Follow the notes: they sit on the safe route. Hold ◀ ▶ to slide between lanes, JUMP to hop (you always land on a beat). Grab notes, spare tires and nitro; jump tumbleweeds and broken planks. Every 5th stop is an Area 51 boss: stay on the route under the saucer to shoot it.',
-        how: 'Every stop is a new one-minute song, 16 BPM faster than the last. Follow the notes: they sit on the planned route, and nothing deadly is ever on it. Hold Left/Right (A/D) to slide between 4 lanes, Up/W/Space to jump (you always land on a beat). Grab notes for the Groove meter (ENCORE!), spare tires for a shield, nitro for an untouchable chorus. Jump tumbleweeds and cracked bridge planks; dodge wrecks, boulders and the police. Every 5th stop is Area 51: stay on the route under the saucer and the RV shoots it on the beat. 3 dents and you’re wrecked.' },
+        touchHow: 'Every stop is a new one-minute song, faster than the last. Follow the notes: they sit on the safe route. Hold ◀ ▶ to slide between lanes, JUMP to hop (you always land on a beat). Grab notes, spare tires and nitro; jump tumbleweeds and broken planks. Every 5th stop is an Area 51 boss: follow the faint green trail to dodge and shoot the saucer (the trail fades out by stop 20).',
+        how: 'Every stop is a new one-minute song, 16 BPM faster than the last. Follow the notes: they sit on the planned route, and nothing deadly is ever on it. Hold Left/Right (A/D) to slide between 4 lanes, Up/W/Space to jump (you always land on a beat). Grab notes for the Groove meter (ENCORE!), spare tires for a shield, nitro for an untouchable chorus. Jump tumbleweeds and cracked bridge planks; dodge wrecks, boulders and the police. Every 5th stop is Area 51: a faint green trail marks the route (it fades out over the first few bosses); stay on it under the saucer and the RV shoots it on the beat. 3 dents and you’re wrecked.' },
     ],
 
     create(api) {
@@ -1375,6 +1372,27 @@
           for (let y = yTop - U.wrap(-scroll, 8); y < yBot; y += 8) if (y >= yTop) { rect(ROAD_L - 5, y, 4, 2, railCol); rect(ROAD_R + 1, y, 4, 2, railCol); }
         });
         const onBridge = (y) => onB.some(([a, b]) => y >= a && y < b);
+
+        // Boss stages: notes are sparse there, so show the planned route as a faint dotted trail
+        // (it slides between lanes exactly as the route does, and only as far as it's charted).
+        // It's training wheels: fainter and shorter at each boss, gone from the 4th (stop 20) on.
+        const trail = trailStrength(song.k);
+        if (boss && S.boss && !S.boss.dead && trail > 0) {
+          const routeX = (n) => {
+            for (const c of S.changes) {
+              if (n >= c.n - c.w && n < c.n) return U.lerp(LANES[c.from], LANES[c.to], (n - (c.n - c.w)) / c.w);
+              if (c.n - c.w > n) break;
+            }
+            return LANES[routeLane(n)];
+          };
+          const a = ((0.28 + 0.25 * env.note) * (0.4 + 0.6 * trail)).toFixed(2);
+          const ahead = ((RV_Y + 6) / song.row) * (0.35 + 0.65 * trail); // beats of trail shown ahead of the RV
+          const n0 = Math.floor((beat - 0.5) * 4), nTop = Math.min(S.genBar * 16, Math.ceil((beat + ahead) * 4));
+          for (let n = n0 - (n0 % 2); n < nTop; n += 2) {
+            const y = yOf(n / 4, beat) - 3;
+            if (y >= 0 && y <= LH) rect(routeX(n) - 0.5, y, 2, 2, `rgba(170,255,160,${a})`);
+          }
+        }
 
         const draws = [];
         const PROPS = ['small', 'bush', 'skull', 'rock', 'small', 'sign'];

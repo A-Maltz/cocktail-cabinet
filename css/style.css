@@ -307,7 +307,6 @@ body.no-scroll { overflow: hidden; }
 .guide table { border-collapse: collapse; width: 100%; min-width: 420px; }
 .guide th, .guide td { text-align: left; padding: 4px 10px; border-bottom: 1px solid #2d2963; vertical-align: top; }
 .guide th { color: var(--dim); font-weight: normal; }
-.guide .cheat-note { color: var(--dim); margin-top: 14px; }
 #overlay .guide.in-overlay h3 { display: none; } /* the overlay already says HOW TO PLAY */
 #overlay .guide.in-overlay { margin: 0; max-width: 680px; width: 100%; text-align: left; }
 
@@ -315,9 +314,6 @@ body.no-scroll { overflow: hidden; }
 .cheat-form { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
 .cheat-form input { font-family: var(--pixel); font-size: 14px; text-transform: uppercase; background: #0d0b24; color: var(--ink); border: 2px solid var(--c, var(--accent)); border-radius: 8px; padding: 8px 10px; width: 14em; max-width: 70vw; }
 .cheat-form .cheat-msg { flex-basis: 100%; min-height: 1.2em; color: #ffd23a; }
-.cheat-list { flex-basis: 100%; list-style: none; margin: 0; padding: 0; color: var(--dim); font-size: .92em; line-height: 1.05; }
-.cheat-list li { margin: 2px 0; }
-.cheat-list b { color: var(--ink); font-weight: normal; }
 /* landscape phones in fullscreen: stack the fullscreen buttons in the side bar, clear of the game */
 @media (orientation: landscape) and (max-height: 500px) {
   #arena:fullscreen #fs-bar, #arena.fake-fs #fs-bar, #arena:-webkit-full-screen #fs-bar { flex-direction: column; align-items: flex-end; left: auto; }

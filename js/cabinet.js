@@ -333,8 +333,6 @@
     }
     if (g.rules) h += '<h4>Rules</h4>' + list(g.rules);
     if (g.tips) h += '<h4>Tips</h4>' + list(g.tips);
-    const extra = (def.cheats || []).map((c) => c.split(':')[0]).join(', ');
-    h += `<p class="cheat-note">Testing? Press <b>Cheats</b> while playing and type a code: SKIP, LEVEL 5, LIVES, GOD${extra ? ', ' + esc(extra) : ''}.</p>`;
     return h;
   }
   function openHelp() {
@@ -350,7 +348,6 @@
   // ---- cheat codes (for testing). Games handle codes in inst.cheat(code, n), returning a message
   // (or undefined if they don't know it); flipped modes get LEVEL/SKIP/LIVES from Rounds.
   const CHEAT_ALIASES = { STOP: 'LEVEL', WAVE: 'LEVEL', ROUND: 'LEVEL', NEXT: 'SKIP', HEAL: 'LIVES', HP: 'LIVES', INVINCIBLE: 'GOD' };
-  const CHEAT_HELP = ['SKIP: finish this level / round / stop', 'LEVEL 5: jump to level 5', 'LIVES: refill lives or hearts', 'GOD: invincible on/off'];
   function runCheat(text) {
     const run = current;
     if (!run || run.over) return { ok: false, msg: 'Start a game first.' };
@@ -383,9 +380,7 @@
     const close = () => { overlay.hidden = true; if (!wasPaused) pauseQuietly(false); };
     const form = document.createElement('form');
     form.className = 'cheat-form';
-    form.innerHTML = '<input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SKIP" aria-label="Cheat code"><button class="btn" type="submit">Enter</button><p class="cheat-msg"></p><ul class="cheat-list"></ul>';
-    form.querySelector('.cheat-list').innerHTML = [...CHEAT_HELP, ...(current.def.cheats || [])]
-      .map((c) => { const [code, what] = c.split(': '); return `<li><b>${esc(code)}</b>: ${esc(what)}</li>`; }).join('');
+    form.innerHTML = '<input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SKIP" aria-label="Cheat code"><button class="btn" type="submit">Enter</button><p class="cheat-msg"></p>'; // the codes themselves aren't listed: you have to know them (see the README)
     const input = form.querySelector('input'), msgEl = form.querySelector('.cheat-msg');
     form.addEventListener('submit', (e) => {
       e.preventDefault();
