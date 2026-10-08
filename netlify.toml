@@ -8,3 +8,10 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Every game has its own address (/snake, /breakout, ...). Real files are served as-is; any
+# other path gets index.html (status 200, not a redirect), whose router opens that game.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

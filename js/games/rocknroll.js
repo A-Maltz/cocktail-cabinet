@@ -304,6 +304,7 @@
 
   Cabinet.register({
     id: 'rocknroll',
+    slug: 'rocknroller',
     title: 'RocknRoller',
     color: '#ff9a3c',
     tagline: 'A tour of the Nevada desert in an RV. Every stop is a brand-new one-minute song, and the road is the song.',

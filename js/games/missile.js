@@ -23,6 +23,7 @@
 
   Cabinet.register({
     id: 'missile',
+    slug: 'missile-command',
     title: 'Missile Command',
     color: '#ff5a5a',
     tagline: 'Six cities. Three batteries. Incoming.',

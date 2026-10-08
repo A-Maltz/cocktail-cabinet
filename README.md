@@ -71,6 +71,10 @@ Every canvas game also has a **Watch** mode where the computer plays both sides.
   - spare tire: a one-hit shield
   - nitro: an untouchable chorus with double points (no key change)
 
+## Addresses
+
+Each game has its own page: `/snake`, `/breakout`, `/splat`, `/asteroids`, `/missile-command`, `/invaders`, `/imitation`, `/rocknroller`. (The engine also supports `hidden: true` on a game: no menu card, but its address still works.) Netlify serves `index.html` for every path that isn't a real file (`netlify.toml`), and `route()` in `js/cabinet.js` opens the right game. To serve locally with the same behaviour you need a server that falls back to `index.html`; with `python -m http.server`, only `/` works.
+
 ## Running it
 
 It's plain HTML/CSS/JS with no build step. Open `index.html`, or serve the folder:

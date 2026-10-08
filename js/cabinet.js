@@ -176,6 +176,28 @@
     window.scrollTo(0, 0);
   }
 
+  // ---- URLs: every game has its own address (/snake, /breakout, ...). Netlify serves index.html
+  // for every path (see netlify.toml) and route() picks the screen from the path. A game marked
+  // hidden gets no card on the menu, but its address still works if you type it in.
+  const slugOf = (g) => g.slug || g.id;
+  function go(path) {
+    try { if (location.pathname !== path) history.pushState({}, '', path); } catch (e) { /* e.g. opened from file:// */ }
+    route();
+  }
+  function route() {
+    stop();
+    const slug = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '').toLowerCase();
+    const def = slug && games.find((g) => slugOf(g) === slug);
+    if (def) {
+      openSetup(def);
+      document.title = `${def.title} · Cocktail Cabinet`;
+      return;
+    }
+    if (slug && slug !== 'index.html') { try { history.replaceState({}, '', '/'); } catch (e) { /* */ } }
+    document.title = 'Cocktail Cabinet';
+    show('menu');
+  }
+
   function boot() {
     canvas = $('#screen');
     ctx = canvas.getContext('2d');
@@ -184,19 +206,23 @@
 
     // ---- menu cards
     const grid = $('#game-grid');
-    games.forEach((g, i) => {
-      const b = document.createElement('button');
+    games.filter((g) => !g.hidden).forEach((g, i) => {
+      const b = document.createElement('a');
       b.className = 'card';
+      b.href = '/' + slugOf(g);
       b.style.setProperty('--c', g.color);
       b.innerHTML = `<span class="num">${String(i + 1).padStart(2, '0')}</span>
         <h3>${g.title}</h3><p>${g.tagline}</p><p class="flip">${g.flip ? `Flip: ${g.flip}` : g.badge || ''}</p>`;
-      b.addEventListener('click', () => openSetup(g));
+      b.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return; // let "open in new tab" work
+        e.preventDefault();
+        go('/' + slugOf(g));
+      });
       grid.appendChild(b);
     });
 
-    document.querySelectorAll('[data-go]').forEach((el) =>
-      el.addEventListener('click', () => { stop(); show(el.dataset.go); }));
-    $('#btn-menu').addEventListener('click', () => { stop(); show('menu'); });
+    document.querySelectorAll('[data-go]').forEach((el) => el.addEventListener('click', () => go('/')));
+    $('#btn-menu').addEventListener('click', () => go('/'));
     $('#btn-side').addEventListener('click', () => { const g = current && current.def; stop(); if (g) openSetup(g); });
     $('#btn-pause').addEventListener('click', () => togglePause());
     const muteBtn = $('#btn-mute');
@@ -255,7 +281,8 @@
       if (document.hidden && current && !current.def.dom && !current.over) pause(true);
     });
 
-    show('menu');
+    window.addEventListener('popstate', route);
+    route();
   }
 
   function openSetup(def) {
@@ -410,7 +437,7 @@
     showOverlay(result.title || 'GAME OVER', lines, [
       ['Play again', () => start(run.def, run.mode.id)],
       ['Switch side', () => { stop(); openSetup(run.def); }, true],
-      ['Cabinet', () => { stop(); show('menu'); }, true],
+      ['Cabinet', () => go('/'), true],
     ]);
   }
 
